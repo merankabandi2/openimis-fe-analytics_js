@@ -128,6 +128,7 @@ export function fetchQueries(params) {
             entityType
             queryConfig
             isPublic
+            validityFrom
             createdBy {
               id
               username
@@ -137,7 +138,7 @@ export function fetchQueries(params) {
       }
     }
   `;
-  
+
   return graphql(
     query,
     params,

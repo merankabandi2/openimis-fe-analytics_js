@@ -74,7 +74,7 @@ const SavedQueriesPage = ({
     fetchQueries({
       first: rowsPerPage,
       after: page * rowsPerPage,
-      orderBy: ['-dateCreated'],
+      orderBy: ['-validityFrom'],
     });
   }, [fetchQueries, page, rowsPerPage]);
 
@@ -181,7 +181,7 @@ const SavedQueriesPage = ({
                   {formatMessage(`entity.${query.entityType}`)}
                 </TableCell>
                 <TableCell>{query.createdBy?.username}</TableCell>
-                <TableCell>{formatDateFromISO(query.dateCreated)}</TableCell>
+                <TableCell>{formatDateFromISO(query.validityFrom)}</TableCell>
                 <TableCell>
                   <Box className={classes.actions}>
                     <Tooltip title={formatMessage('savedQueries.run')}>

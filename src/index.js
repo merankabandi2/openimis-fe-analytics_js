@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dashboard, BarChart } from '@material-ui/icons';
+import { Dashboard, BarChart, SaveAlt, History } from '@material-ui/icons';
 import { FormattedMessage } from '@openimis/fe-core';
 import messages_en from './translations/en.json';
 import messages_fr from './translations/fr.json';
@@ -54,6 +54,20 @@ const DEFAULT_CONFIG = {
       route: `/${QUERY_BUILDER_ROUTE}`,
       filter: (rights) => rights.includes(RIGHT_ANALYTICS_CREATE_QUERY),
       id: 'analytics.queryBuilder',
+    },
+    {
+      text: <FormattedMessage module="analytics" id="menu.analytics.savedQueries" />,
+      icon: <SaveAlt />,
+      route: `/${SAVED_QUERIES_ROUTE}`,
+      filter: (rights) => rights.includes(RIGHT_ANALYTICS_VIEW),
+      id: 'analytics.savedQueries',
+    },
+    {
+      text: <FormattedMessage module="analytics" id="menu.analytics.exportHistory" />,
+      icon: <History />,
+      route: `/${EXPORT_HISTORY_ROUTE}`,
+      filter: (rights) => rights.includes(RIGHT_ANALYTICS_EXPORT),
+      id: 'analytics.exportHistory',
     },
   ],
 };

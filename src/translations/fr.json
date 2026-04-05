@@ -1,6 +1,8 @@
 {
   "analytics.menu.analytics.dashboard": "Tableau de bord analytique",
   "analytics.menu.analytics.queryBuilder": "Constructeur de requêtes",
+  "analytics.menu.analytics.savedQueries": "Requêtes Sauvegardées",
+  "analytics.menu.analytics.exportHistory": "Historique des Exports",
   "analytics.dashboard.pageTitle": "Tableau de bord analytique",
   "analytics.dashboard.title": "Analytique",
   "analytics.dashboard.noWidgets": "Aucun widget configuré",

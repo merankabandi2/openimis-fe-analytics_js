@@ -1,6 +1,8 @@
 {
   "analytics.menu.analytics.dashboard": "Analytics Dashboard",
   "analytics.menu.analytics.queryBuilder": "Query Builder",
+  "analytics.menu.analytics.savedQueries": "Saved Queries",
+  "analytics.menu.analytics.exportHistory": "Export History",
   "analytics.dashboard.pageTitle": "Analytics Dashboard",
   "analytics.dashboard.title": "Analytics",
   "analytics.dashboard.noWidgets": "No widgets configured",
