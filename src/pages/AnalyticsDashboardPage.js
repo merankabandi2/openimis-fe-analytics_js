@@ -135,10 +135,25 @@ const AnalyticsDashboardPage = ({
   };
 
   const renderWidget = (widget) => {
-    const data = widgetData[widget.id]?.data || [];
+    // GraphQL returns `data` as a JSONString; parse it so recharts/table widgets can iterate.
+    const rawData = widgetData[widget.id]?.data;
+    let data = rawData;
+    if (typeof rawData === 'string') {
+      try {
+        data = JSON.parse(rawData);
+      } catch (e) {
+        data = [];
+      }
+    }
+    if (!Array.isArray(data)) {
+      data = [];
+    }
     const loading = loadingWidgets[widget.id] || false;
 
-    switch (widget.widgetType) {
+    // widget.widgetType comes back as an UPPERCASE Graphene enum ("BAR_CHART"); the
+    // widget components switch on the underlying lowercase choice key ("bar_chart").
+    const widgetTypeKey = (widget.widgetType || '').toLowerCase();
+    switch (widgetTypeKey) {
       case 'metric':
         return (
           <MetricWidget
@@ -156,7 +171,7 @@ const AnalyticsDashboardPage = ({
             title={widget.title}
             data={data}
             config={widget.config}
-            widgetType={widget.widgetType}
+            widgetType={widgetTypeKey}
             loading={loading}
           />
         );

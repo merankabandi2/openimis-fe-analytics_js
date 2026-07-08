@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
 const QueryResults = ({ results, entityType }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
-  const { formatMessage } = useTranslations('analytics', modulesManager);
+  const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(ROWS_PER_PAGE_OPTIONS[0]);
@@ -56,7 +56,20 @@ const QueryResults = ({ results, entityType }) => {
     return null;
   }
 
-  const { data, rowCount, executionTime } = results;
+  // GraphQL returns `data` as a JSONString — parse it back into an array of rows.
+  const rawData = results.data;
+  let data = rawData;
+  if (typeof rawData === 'string') {
+    try {
+      data = JSON.parse(rawData);
+    } catch (e) {
+      data = [];
+    }
+  }
+  if (!Array.isArray(data)) {
+    data = [];
+  }
+  const { rowCount, executionTime } = results;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -102,16 +115,18 @@ const QueryResults = ({ results, entityType }) => {
         </Typography>
         <Box className={classes.executionInfo}>
           <Chip
-            label={formatMessage('queryResults.rowCount', { count: rowCount })}
+            label={formatMessageWithValues('queryResults.rowCount', { count: rowCount })}
             color="primary"
             variant="outlined"
           />
           <Chip
-            label={formatMessage('queryResults.executionTime', { time: executionTime?.toFixed(2) || '0' })}
+            label={formatMessageWithValues('queryResults.executionTime', {
+              time: executionTime != null ? executionTime.toFixed(2) : '0',
+            })}
             variant="outlined"
           />
           <Chip
-            label={formatMessage(`entity.${entityType}`)}
+            label={formatMessage(`entity.${(entityType || '').toLowerCase()}`)}
             variant="outlined"
           />
         </Box>

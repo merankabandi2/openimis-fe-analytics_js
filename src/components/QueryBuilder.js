@@ -69,6 +69,7 @@ const useStyles = makeStyles((theme) => ({
 const QueryBuilder = ({
   entityType: initialEntityType,
   queryConfig: initialConfig,
+  autoRun,
   onSave,
   onExecute,
   fetchEntityFields,
@@ -84,11 +85,43 @@ const QueryBuilder = ({
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations('analytics', modulesManager);
 
-  const [entityType, setEntityType] = useState(initialEntityType || '');
-  const [filters, setFilters] = useState(initialConfig?.filters || []);
+  // Normalise inputs coming from SavedQueriesPage — the API exposes the entity_type
+  // as an uppercased enum and seeded queries may use legacy "dimensions"/"measures"
+  // rather than "group_by"/"aggregations".
+  const normalisedInitialEntity = (initialEntityType || '').toLowerCase();
+  const legacyGroupBy = initialConfig?.dimensions;
+  const legacyMeasures = initialConfig?.measures;
+  const legacyFilters = initialConfig?.filters;
+
+  const [entityType, setEntityType] = useState(normalisedInitialEntity || '');
+  // Accept filters as either array (builder UI form) or object keyed by field (stored form).
+  const parsedFilters = Array.isArray(legacyFilters)
+    ? legacyFilters
+    : legacyFilters && typeof legacyFilters === 'object'
+      ? Object.entries(legacyFilters).map(([field, cond]) => ({
+        field,
+        operator: (cond && cond.operator) || 'exact',
+        value: cond && cond.value !== undefined ? cond.value : '',
+      }))
+      : [];
+  const parsedGroupBy = initialConfig?.group_by || (Array.isArray(legacyGroupBy) ? legacyGroupBy : []);
+  // Materialise seeded `measures: ["count"]` into builder aggregation rows.
+  const parsedAggregations = initialConfig?.aggregations && (
+    Array.isArray(initialConfig.aggregations)
+      ? initialConfig.aggregations
+      : Object.entries(initialConfig.aggregations).map(([name, cfg]) => ({
+        name, function: cfg.function, field: cfg.field,
+      }))
+  ) || (Array.isArray(legacyMeasures)
+    ? legacyMeasures.map((m) => (typeof m === 'string'
+      ? { name: `${m}_value`, function: m, field: 'id' }
+      : { name: m.name || `${m.function}_${m.field || 'id'}`, function: m.function || 'count', field: m.field || 'id' }))
+    : []
+  );
+  const [filters, setFilters] = useState(parsedFilters);
   const [selectedFields, setSelectedFields] = useState(initialConfig?.fields || []);
-  const [groupBy, setGroupBy] = useState(initialConfig?.group_by || []);
-  const [aggregations, setAggregations] = useState(initialConfig?.aggregations || []);
+  const [groupBy, setGroupBy] = useState(parsedGroupBy);
+  const [aggregations, setAggregations] = useState(parsedAggregations);
   const [orderBy, setOrderBy] = useState(initialConfig?.order_by || []);
   const [limit, setLimit] = useState(initialConfig?.limit || 1000);
 
@@ -98,6 +131,31 @@ const QueryBuilder = ({
       fetchEntityFields(entityType);
     }
   }, [entityType, fetchEntityFields]);
+
+  // Auto-run the query when navigating from SavedQueriesPage "Run" action.
+  const [hasAutoRun, setHasAutoRun] = useState(false);
+  useEffect(() => {
+    if (autoRun && !hasAutoRun && entityType) {
+      setHasAutoRun(true);
+      const config = {
+        filters: filters.reduce((acc, f) => {
+          if (f.field && f.value !== '') {
+            acc[f.field] = { operator: f.operator, value: f.value };
+          }
+          return acc;
+        }, {}),
+        group_by: groupBy.length ? groupBy : undefined,
+        aggregations: aggregations.reduce((acc, a) => {
+          if (a.name) {
+            acc[a.name] = { function: a.function, field: a.field || 'id' };
+          }
+          return acc;
+        }, {}),
+        limit,
+      };
+      executeQuery(entityType, config);
+    }
+  }, [autoRun, hasAutoRun, entityType, filters, groupBy, aggregations, limit, executeQuery]);
 
   const fields = entityFields[entityType] || [];
 

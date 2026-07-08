@@ -87,12 +87,17 @@ const SavedQueriesPage = ({
     setPage(0);
   };
 
+  // Normalise the entity type the API returns (GraphQL auto-uppercases enum values from
+  // the Django choices field) into the lowercase form the builder UI and translations use.
+  const normaliseEntityType = (et) => (et || '').toLowerCase();
+
   const handleRunQuery = (query) => {
     history.push({
       pathname: '/analytics/query-builder',
       state: {
-        entityType: query.entityType,
+        entityType: normaliseEntityType(query.entityType),
         queryConfig: JSON.parse(query.queryConfig),
+        autoRun: true,
       },
     });
   };
@@ -102,7 +107,7 @@ const SavedQueriesPage = ({
       pathname: '/analytics/query-builder',
       state: {
         queryId: query.id,
-        entityType: query.entityType,
+        entityType: normaliseEntityType(query.entityType),
         queryConfig: JSON.parse(query.queryConfig),
         queryName: query.name,
         queryDescription: query.description,
@@ -114,10 +119,11 @@ const SavedQueriesPage = ({
     history.push({
       pathname: '/analytics/query-builder',
       state: {
-        entityType: query.entityType,
+        entityType: normaliseEntityType(query.entityType),
         queryConfig: JSON.parse(query.queryConfig),
-        queryName: `${query.name} (Copy)`,
+        queryName: `${query.name} (Copie)`,
         queryDescription: query.description,
+        isPublic: false,
       },
     });
   };
@@ -178,7 +184,8 @@ const SavedQueriesPage = ({
                   )}
                 </TableCell>
                 <TableCell>
-                  {formatMessage(`entity.${query.entityType}`)}
+                  {/* GraphQL returns enum choices UPPERCASE; translation keys are lowercase */}
+                  {formatMessage(`entity.${(query.entityType || '').toLowerCase()}`)}
                 </TableCell>
                 <TableCell>{query.createdBy?.username}</TableCell>
                 <TableCell>{formatDateFromISO(query.validityFrom)}</TableCell>

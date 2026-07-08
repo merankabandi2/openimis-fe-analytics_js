@@ -27,15 +27,18 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const QueryBuilderPage = ({ createQuery, history }) => {
+const QueryBuilderPage = ({ createQuery, history, location }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations('analytics', modulesManager);
 
+  // Incoming state from SavedQueriesPage (Run/Edit/Copy navigation).
+  const incoming = (location && location.state) || {};
+
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [queryName, setQueryName] = useState('');
-  const [queryDescription, setQueryDescription] = useState('');
-  const [isPublic, setIsPublic] = useState(false);
+  const [queryName, setQueryName] = useState(incoming.queryName || '');
+  const [queryDescription, setQueryDescription] = useState(incoming.queryDescription || '');
+  const [isPublic, setIsPublic] = useState(incoming.isPublic || false);
   const [currentConfig, setCurrentConfig] = useState(null);
   const [currentEntityType, setCurrentEntityType] = useState(null);
 
@@ -72,6 +75,9 @@ const QueryBuilderPage = ({ createQuery, history }) => {
       <Helmet title={formatMessage('queryBuilder.pageTitle')} />
       
       <QueryBuilder
+        entityType={incoming.entityType}
+        queryConfig={incoming.queryConfig}
+        autoRun={Boolean(incoming.autoRun)}
         onSave={handleSaveQuery}
         onExecute={handleExecuteQuery}
       />

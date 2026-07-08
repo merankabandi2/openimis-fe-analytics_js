@@ -19,7 +19,20 @@ export function fetchDashboards(params) {
 }
 
 export function fetchDashboard(dashboardId) {
-  const payload = formatQuery('analyticsDashboard', [`id: "${dashboardId}"`], [
+  // Dashboards are exposed through Graphene-Django's Relay connection, so `id` comes back
+  // as a global base64 ID. The underlying `analyticsDashboard(id)` resolver does
+  // `objects.get(pk=id)` which expects a raw UUID — decode before dispatching.
+  let resolvedId = dashboardId;
+  if (typeof dashboardId === 'string' && !/^[0-9a-f-]{36}$/i.test(dashboardId)) {
+    try {
+      const decoded = atob(dashboardId);
+      const parts = decoded.split(':');
+      if (parts.length >= 2) resolvedId = parts[parts.length - 1];
+    } catch (e) {
+      // Leave as-is if decoding fails — the server error will surface in the UI.
+    }
+  }
+  const payload = formatQuery('analyticsDashboard', [`id: "${resolvedId}"`], [
     'id', 'name', 'description', 'layoutConfig', 'isPublic', 'isDefault',
     'createdBy { id username }',
     'widgets { edges { node { id widgetType title config position query { id name entityType queryConfig } } } }',
