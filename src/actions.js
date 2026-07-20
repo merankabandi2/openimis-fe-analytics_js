@@ -89,6 +89,9 @@ export function fetchEntityFields(entityType) {
     query,
     { entityType },
     'ANALYTICS_ENTITY_FIELDS',
+    // 4th arg lands on action.meta — the reducer keys entityFields by
+    // action.meta.entityType (the GQL response does not echo it back).
+    { entityType },
   );
 }
 
