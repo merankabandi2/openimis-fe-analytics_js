@@ -1,12 +1,5 @@
-import {
-  parseData,
-  formatPageQuery,
-  formatPageQueryWithCount,
-  formatGQLString,
-  formatQuery,
-  decodeId,
-  pageInfo,
-} from '@openimis/fe-core';
+import { parseData, pageInfo } from '@openimis/fe-core';
+import { graphqlErrorMessage, requestErrorMessage } from './utils/analytics';
 
 const INITIAL_STATE = {
   // Dashboards
@@ -15,42 +8,47 @@ const INITIAL_STATE = {
   dashboards: [],
   dashboardsPageInfo: {},
   errorDashboards: null,
-  
+
   currentDashboard: null,
   fetchingDashboard: false,
   fetchedDashboard: false,
   errorDashboard: null,
-  
+
   // Queries
   fetchingQueries: false,
   fetchedQueries: false,
   queries: [],
   queriesPageInfo: {},
   errorQueries: null,
-  
+
   currentQuery: null,
   fetchingQuery: false,
   fetchedQuery: false,
   errorQuery: null,
-  
+
   // Query execution
   executingQuery: false,
   executedQuery: false,
   queryResults: null,
   queryError: null,
-  
+
   // Entity fields
   fetchingEntityFields: false,
   fetchedEntityFields: false,
   entityFields: {},
   errorEntityFields: null,
-  
+
+  // Saved query create/update/delete
+  savingQuery: false,
+  saveQueryError: null,
+
   // Export
   exporting: false,
   exported: false,
   exportUrl: null,
+  exportRowCount: null,
   exportError: null,
-  
+
   // Export history
   fetchingExports: false,
   fetchedExports: false,
@@ -59,10 +57,12 @@ const INITIAL_STATE = {
   errorExports: null,
 };
 
-function reducer(
-  state = INITIAL_STATE,
-  action,
-) {
+// GraphQL refusals arrive as HTTP 200 (the _RESP action) with an `errors` array
+// and null data; network and HTTP failures arrive as the _ERR action.
+const responseError = (action) => graphqlErrorMessage(action.payload);
+const responseData = (action, field) => (action.payload && action.payload.data ? action.payload.data[field] : null);
+
+function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     // Dashboards
     case 'ANALYTICS_DASHBOARDS_REQ':
@@ -74,22 +74,24 @@ function reducer(
         dashboardsPageInfo: {},
         errorDashboards: null,
       };
-    case 'ANALYTICS_DASHBOARDS_RESP':
+    case 'ANALYTICS_DASHBOARDS_RESP': {
+      const data = responseData(action, 'analyticsDashboards');
       return {
         ...state,
         fetchingDashboards: false,
         fetchedDashboards: true,
-        dashboards: parseData(action.payload.data.analyticsDashboards),
-        dashboardsPageInfo: pageInfo(action.payload.data.analyticsDashboards),
-        errorDashboards: null,
+        dashboards: data ? parseData(data) : [],
+        dashboardsPageInfo: data ? pageInfo(data) : {},
+        errorDashboards: responseError(action),
       };
+    }
     case 'ANALYTICS_DASHBOARDS_ERR':
       return {
         ...state,
         fetchingDashboards: false,
-        errorDashboards: action.payload,
+        errorDashboards: requestErrorMessage(action.payload),
       };
-      
+
     // Single Dashboard
     case 'ANALYTICS_DASHBOARD_REQ':
       return {
@@ -104,16 +106,16 @@ function reducer(
         ...state,
         fetchingDashboard: false,
         fetchedDashboard: true,
-        currentDashboard: action.payload.data.analyticsDashboard,
-        errorDashboard: null,
+        currentDashboard: responseData(action, 'analyticsDashboard'),
+        errorDashboard: responseError(action),
       };
     case 'ANALYTICS_DASHBOARD_ERR':
       return {
         ...state,
         fetchingDashboard: false,
-        errorDashboard: action.payload,
+        errorDashboard: requestErrorMessage(action.payload),
       };
-      
+
     // Queries
     case 'ANALYTICS_QUERIES_REQ':
       return {
@@ -124,22 +126,24 @@ function reducer(
         queriesPageInfo: {},
         errorQueries: null,
       };
-    case 'ANALYTICS_QUERIES_RESP':
+    case 'ANALYTICS_QUERIES_RESP': {
+      const data = responseData(action, 'analyticsQueries');
       return {
         ...state,
         fetchingQueries: false,
         fetchedQueries: true,
-        queries: parseData(action.payload.data.analyticsQueries),
-        queriesPageInfo: pageInfo(action.payload.data.analyticsQueries),
-        errorQueries: null,
+        queries: data ? parseData(data).filter(Boolean) : [],
+        queriesPageInfo: data ? pageInfo(data) : {},
+        errorQueries: responseError(action),
       };
+    }
     case 'ANALYTICS_QUERIES_ERR':
       return {
         ...state,
         fetchingQueries: false,
-        errorQueries: action.payload,
+        errorQueries: requestErrorMessage(action.payload),
       };
-      
+
     // Query execution
     case 'ANALYTICS_EXECUTE_QUERY_REQ':
       return {
@@ -154,16 +158,16 @@ function reducer(
         ...state,
         executingQuery: false,
         executedQuery: true,
-        queryResults: action.payload.data.executeAnalyticsQuery,
-        queryError: null,
+        queryResults: responseData(action, 'executeAnalyticsQuery'),
+        queryError: responseError(action),
       };
     case 'ANALYTICS_EXECUTE_QUERY_ERR':
       return {
         ...state,
         executingQuery: false,
-        queryError: action.payload,
+        queryError: requestErrorMessage(action.payload),
       };
-      
+
     // Entity fields
     case 'ANALYTICS_ENTITY_FIELDS_REQ':
       return {
@@ -172,7 +176,7 @@ function reducer(
         fetchedEntityFields: false,
         errorEntityFields: null,
       };
-    case 'ANALYTICS_ENTITY_FIELDS_RESP':
+    case 'ANALYTICS_ENTITY_FIELDS_RESP': {
       const entityType = action.meta.entityType;
       return {
         ...state,
@@ -180,17 +184,32 @@ function reducer(
         fetchedEntityFields: true,
         entityFields: {
           ...state.entityFields,
-          [entityType]: action.payload.data.analyticsEntityFields,
+          [entityType]: responseData(action, 'analyticsEntityFields') || [],
         },
-        errorEntityFields: null,
+        errorEntityFields: responseError(action),
       };
+    }
     case 'ANALYTICS_ENTITY_FIELDS_ERR':
       return {
         ...state,
         fetchingEntityFields: false,
-        errorEntityFields: action.payload,
+        errorEntityFields: requestErrorMessage(action.payload),
       };
-      
+
+    // Saved query create/update/delete
+    case 'ANALYTICS_CREATE_QUERY_REQ':
+    case 'ANALYTICS_UPDATE_QUERY_REQ':
+    case 'ANALYTICS_DELETE_QUERY_REQ':
+      return { ...state, savingQuery: true, saveQueryError: null };
+    case 'ANALYTICS_CREATE_QUERY_RESP':
+    case 'ANALYTICS_UPDATE_QUERY_RESP':
+    case 'ANALYTICS_DELETE_QUERY_RESP':
+      return { ...state, savingQuery: false, saveQueryError: responseError(action) };
+    case 'ANALYTICS_CREATE_QUERY_ERR':
+    case 'ANALYTICS_UPDATE_QUERY_ERR':
+    case 'ANALYTICS_DELETE_QUERY_ERR':
+      return { ...state, savingQuery: false, saveQueryError: requestErrorMessage(action.payload) };
+
     // Export
     case 'ANALYTICS_EXPORT_REQ':
       return {
@@ -198,23 +217,27 @@ function reducer(
         exporting: true,
         exported: false,
         exportUrl: null,
+        exportRowCount: null,
         exportError: null,
       };
-    case 'ANALYTICS_EXPORT_RESP':
+    case 'ANALYTICS_EXPORT_RESP': {
+      const data = responseData(action, 'exportAnalyticsData');
       return {
         ...state,
         exporting: false,
-        exported: true,
-        exportUrl: action.payload.data.exportAnalyticsData.exportUrl,
-        exportError: null,
+        exported: Boolean(data),
+        exportUrl: data ? data.exportUrl : null,
+        exportRowCount: data ? data.rowCount : null,
+        exportError: responseError(action),
       };
+    }
     case 'ANALYTICS_EXPORT_ERR':
       return {
         ...state,
         exporting: false,
-        exportError: action.payload,
+        exportError: requestErrorMessage(action.payload),
       };
-      
+
     // Export history
     case 'ANALYTICS_EXPORTS_REQ':
       return {
@@ -225,22 +248,24 @@ function reducer(
         exportsPageInfo: {},
         errorExports: null,
       };
-    case 'ANALYTICS_EXPORTS_RESP':
+    case 'ANALYTICS_EXPORTS_RESP': {
+      const data = responseData(action, 'analyticsExports');
       return {
         ...state,
         fetchingExports: false,
         fetchedExports: true,
-        exports: parseData(action.payload.data.analyticsExports),
-        exportsPageInfo: pageInfo(action.payload.data.analyticsExports),
-        errorExports: null,
+        exports: data ? parseData(data) : [],
+        exportsPageInfo: data ? pageInfo(data) : {},
+        errorExports: responseError(action),
       };
+    }
     case 'ANALYTICS_EXPORTS_ERR':
       return {
         ...state,
         fetchingExports: false,
-        errorExports: action.payload,
+        errorExports: requestErrorMessage(action.payload),
       };
-      
+
     // Clear states
     case 'ANALYTICS_CLEAR_QUERY_RESULTS':
       return {
@@ -254,9 +279,10 @@ function reducer(
         ...state,
         exported: false,
         exportUrl: null,
+        exportRowCount: null,
         exportError: null,
       };
-      
+
     default:
       return state;
   }

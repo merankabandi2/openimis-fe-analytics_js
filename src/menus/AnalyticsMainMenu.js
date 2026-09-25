@@ -37,7 +37,7 @@ const AnalyticsMainMenu = (props) => {
   }
 
   // Saved Queries menu item
-  if (rights.includes(RIGHT_ANALYTICS_VIEW)) {
+  if (rights.includes(RIGHT_ANALYTICS_CREATE_QUERY)) {
     menuItems.push({
       text: <FormattedMessage module="analytics" id="menu.analytics.savedQueries" />,
       icon: <SaveAlt />,

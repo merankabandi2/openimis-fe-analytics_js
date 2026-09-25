@@ -21,7 +21,12 @@ import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { useTranslations, useModulesManager, Helmet } from '@openimis/fe-core';
-import { fetchDashboards, fetchDashboard, executeQuery } from '../actions';
+import {
+  fetchDashboards, fetchDashboard, executeWidget, updateDashboardLayout,
+} from '../actions';
+import {
+  graphqlErrorMessage, layoutPositions, pageArgs, parseJson, requestErrorMessage, widgetLayout,
+} from '../utils/analytics';
 import { GRID_COLS, GRID_ROW_HEIGHT, GRID_MARGIN, GRID_CONTAINER_PADDING } from '../constants';
 import MetricWidget from '../components/widgets/MetricWidget';
 import ChartWidget from '../components/widgets/ChartWidget';
@@ -65,32 +70,42 @@ const useStyles = makeStyles((theme) => ({
   widgetContainer: {
     height: '100%',
   },
+  error: {
+    marginBottom: theme.spacing(2),
+    padding: theme.spacing(2),
+    color: theme.palette.error.main,
+  },
 }));
 
 const AnalyticsDashboardPage = ({
   fetchDashboards,
   fetchDashboard,
-  executeQuery,
+  executeWidget,
+  updateDashboardLayout,
   dashboards,
   currentDashboard,
   fetchingDashboards,
   fetchingDashboard,
-  queryResults,
+  errorDashboards,
+  errorDashboard,
   history,
 }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
-  const { formatMessage } = useTranslations('analytics', modulesManager);
+  const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
 
   const [selectedDashboardId, setSelectedDashboardId] = useState(null);
   const [dashboardMenuAnchor, setDashboardMenuAnchor] = useState(null);
-  const [layouts, setLayouts] = useState({});
+  const [layout, setLayout] = useState([]);
+  const [layoutError, setLayoutError] = useState(null);
+  const [breakpoint, setBreakpoint] = useState('lg');
   const [widgetData, setWidgetData] = useState({});
+  const [widgetErrors, setWidgetErrors] = useState({});
   const [loadingWidgets, setLoadingWidgets] = useState({});
 
   // Fetch available dashboards on mount
   useEffect(() => {
-    fetchDashboards({ first: 20 });
+    fetchDashboards(pageArgs({ rowsPerPage: 20 }));
   }, [fetchDashboards]);
 
   // Set default dashboard
@@ -108,30 +123,51 @@ const AnalyticsDashboardPage = ({
     }
   }, [selectedDashboardId, fetchDashboard]);
 
-  // Execute queries for all widgets
+  const widgets = currentDashboard?.widgets?.edges?.map(({ node }) => node) || [];
+  const canEdit = Boolean(currentDashboard?.canEdit);
+
+  // Stored widget positions (a JSON string from GraphQL) define the grid.
   useEffect(() => {
-    if (currentDashboard?.widgets?.edges) {
-      currentDashboard.widgets.edges.forEach(({ node: widget }) => {
-        if (widget.query) {
-          setLoadingWidgets(prev => ({ ...prev, [widget.id]: true }));
-          executeQuery(widget.query.entityType, JSON.parse(widget.query.queryConfig))
-            .then((result) => {
-              setWidgetData(prev => ({ ...prev, [widget.id]: result.payload.data.executeAnalyticsQuery }));
-              setLoadingWidgets(prev => ({ ...prev, [widget.id]: false }));
-            });
-        }
+    setLayout(widgets.map(widgetLayout));
+    setLayoutError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDashboard]);
+
+  // Load every widget's data through its dashboard, which needs only the
+  // dashboards right.
+  useEffect(() => {
+    widgets.forEach((widget) => {
+      if (!widget.query) return;
+      setLoadingWidgets((prev) => ({ ...prev, [widget.id]: true }));
+      executeWidget(widget.id).then((action) => {
+        const error = graphqlErrorMessage(action && action.payload)
+          || (action && action.error ? requestErrorMessage(action.payload) || 'error' : null);
+        const result = action && action.payload && action.payload.data
+          ? action.payload.data.executeAnalyticsWidget
+          : null;
+        setWidgetData((prev) => ({ ...prev, [widget.id]: result }));
+        setWidgetErrors((prev) => ({ ...prev, [widget.id]: error }));
+        setLoadingWidgets((prev) => ({ ...prev, [widget.id]: false }));
       });
-    }
-  }, [currentDashboard, executeQuery]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDashboard, executeWidget]);
 
   const handleDashboardChange = (dashboardId) => {
     setSelectedDashboardId(dashboardId);
     setDashboardMenuAnchor(null);
   };
 
-  const handleLayoutChange = (layout, layouts) => {
-    setLayouts(layouts);
-    // TODO: Save layout to backend
+  // Persist the arrangement once a drag or resize ends (owners with 200004 only).
+  // Stored positions are in the 12-column `lg` grid, so only that grid is saved.
+  const handleLayoutCommit = async (newLayout) => {
+    if (breakpoint !== 'lg') return;
+    setLayout(newLayout);
+    if (!canEdit || !currentDashboard) return;
+    const action = await updateDashboardLayout(currentDashboard.id, layoutPositions(newLayout));
+    const error = graphqlErrorMessage(action && action.payload)
+      || (action && action.error ? requestErrorMessage(action.payload) || 'error' : null);
+    setLayoutError(error);
   };
 
   const renderWidget = (widget) => {
@@ -149,6 +185,8 @@ const AnalyticsDashboardPage = ({
       data = [];
     }
     const loading = loadingWidgets[widget.id] || false;
+    const error = widgetErrors[widget.id] || null;
+    const config = parseJson(widget.config, {}) || {};
 
     // widget.widgetType comes back as an UPPERCASE Graphene enum ("BAR_CHART"); the
     // widget components switch on the underlying lowercase choice key ("bar_chart").
@@ -159,8 +197,9 @@ const AnalyticsDashboardPage = ({
           <MetricWidget
             title={widget.title}
             data={data}
-            config={widget.config}
+            config={config}
             loading={loading}
+            error={error}
           />
         );
       case 'bar_chart':
@@ -170,9 +209,10 @@ const AnalyticsDashboardPage = ({
           <ChartWidget
             title={widget.title}
             data={data}
-            config={widget.config}
+            config={config}
             widgetType={widgetTypeKey}
             loading={loading}
+            error={error}
           />
         );
       case 'table':
@@ -180,8 +220,9 @@ const AnalyticsDashboardPage = ({
           <TableWidget
             title={widget.title}
             data={data}
-            config={widget.config}
+            config={config}
             loading={loading}
+            error={error}
           />
         );
       default:
@@ -193,20 +234,6 @@ const AnalyticsDashboardPage = ({
           </Paper>
         );
     }
-  };
-
-  const generateLayout = () => {
-    if (!currentDashboard?.widgets?.edges) return [];
-    
-    return currentDashboard.widgets.edges.map(({ node: widget }) => ({
-      i: widget.id,
-      x: widget.position.x || 0,
-      y: widget.position.y || 0,
-      w: widget.position.w || 4,
-      h: widget.position.h || 4,
-      minW: 2,
-      minH: 2,
-    }));
   };
 
   if (fetchingDashboards || (selectedDashboardId && fetchingDashboard)) {
@@ -254,20 +281,31 @@ const AnalyticsDashboardPage = ({
         </Menu>
       </Box>
 
-      {currentDashboard?.widgets?.edges?.length > 0 ? (
+      {(errorDashboards || errorDashboard || layoutError) && (
+        <Paper className={classes.error} role="alert">
+          <Typography variant="body2">
+            {errorDashboards || errorDashboard
+              || formatMessageWithValues('dashboard.layoutError', { error: layoutError })}
+          </Typography>
+        </Paper>
+      )}
+
+      {widgets.length > 0 ? (
         <ResponsiveGridLayout
           className="layout"
-          layouts={{ lg: generateLayout() }}
+          layouts={{ lg: layout }}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: GRID_COLS, md: 10, sm: 6, xs: 4, xxs: 2 }}
           rowHeight={GRID_ROW_HEIGHT}
           margin={GRID_MARGIN}
           containerPadding={GRID_CONTAINER_PADDING}
-          onLayoutChange={handleLayoutChange}
-          isDraggable={true}
-          isResizable={true}
+          onBreakpointChange={setBreakpoint}
+          onDragStop={handleLayoutCommit}
+          onResizeStop={handleLayoutCommit}
+          isDraggable={canEdit && breakpoint === 'lg'}
+          isResizable={canEdit && breakpoint === 'lg'}
         >
-          {currentDashboard.widgets.edges.map(({ node: widget }) => (
+          {widgets.map((widget) => (
             <div key={widget.id} className={classes.widgetContainer}>
               {renderWidget(widget)}
             </div>
@@ -300,13 +338,15 @@ const mapStateToProps = (state) => ({
   currentDashboard: state.analytics.currentDashboard,
   fetchingDashboards: state.analytics.fetchingDashboards,
   fetchingDashboard: state.analytics.fetchingDashboard,
-  queryResults: state.analytics.queryResults,
+  errorDashboards: state.analytics.errorDashboards,
+  errorDashboard: state.analytics.errorDashboard,
 });
 
 const mapDispatchToProps = {
   fetchDashboards,
   fetchDashboard,
-  executeQuery,
+  executeWidget,
+  updateDashboardLayout,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(AnalyticsDashboardPage);

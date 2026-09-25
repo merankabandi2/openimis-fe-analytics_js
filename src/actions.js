@@ -2,16 +2,15 @@ import {
   graphql,
   graphqlWithVariables,
   formatQuery,
-  formatPageQuery,
   formatPageQueryWithCount,
-  formatMutation,
-  formatGQLString,
 } from '@openimis/fe-core';
+
+// `params` of the list fetches are arrays of GraphQL argument strings (see pageArgs).
 
 // Dashboards
 export function fetchDashboards(params) {
   const payload = formatPageQueryWithCount('analyticsDashboards', params || [], [
-    'id', 'name', 'description', 'layoutConfig', 'isPublic', 'isDefault',
+    'id', 'name', 'description', 'layoutConfig', 'isPublic', 'isDefault', 'canEdit',
     'createdBy { id username }',
     'widgets { edges { node { id widgetType title config position query { id name entityType queryConfig } } } }',
   ]);
@@ -33,7 +32,7 @@ export function fetchDashboard(dashboardId) {
     }
   }
   const payload = formatQuery('analyticsDashboard', [`id: "${resolvedId}"`], [
-    'id', 'name', 'description', 'layoutConfig', 'isPublic', 'isDefault',
+    'id', 'name', 'description', 'layoutConfig', 'isPublic', 'isDefault', 'canEdit',
     'createdBy { id username }',
     'widgets { edges { node { id widgetType title config position query { id name entityType queryConfig } } } }',
   ]);
@@ -56,6 +55,7 @@ export function executeQuery(entityType, queryConfig) {
       executeAnalyticsQuery(entityType: $entityType, queryConfig: $queryConfig) {
         data
         rowCount
+        truncated
         executionTime
       }
     }
@@ -69,6 +69,22 @@ export function executeQuery(entityType, queryConfig) {
     },
     'ANALYTICS_EXECUTE_QUERY',
   );
+}
+
+// Data of a dashboard widget, readable with the dashboards right alone.
+export function executeWidget(widgetId) {
+  const query = `
+    query ExecuteAnalyticsWidget($widgetId: ID!) {
+      executeAnalyticsWidget(widgetId: $widgetId) {
+        data
+        rowCount
+        truncated
+        executionTime
+      }
+    }
+  `;
+
+  return graphqlWithVariables(query, { widgetId }, 'ANALYTICS_EXECUTE_WIDGET', { widgetId });
 }
 
 // Entity fields
@@ -107,6 +123,7 @@ export function exportData(entityType, queryConfig, exportFormat, queryId = null
       ) {
         exportUrl
         exportId
+        rowCount
       }
     }
   `;
@@ -170,21 +187,31 @@ export function updateQuery(id, input) {
   );
 }
 
-export function createDashboard(input) {
+export function deleteQuery(id) {
   const mutation = `
-    mutation CreateAnalyticsDashboard($input: AnalyticsDashboardInput!) {
-      createAnalyticsDashboard(input: $input) {
-        dashboard {
-          id name description layoutConfig isPublic
-        }
+    mutation DeleteAnalyticsQuery($id: ID!) {
+      deleteAnalyticsQuery(id: $id) {
+        success
+      }
+    }
+  `;
+
+  return graphqlWithVariables(mutation, { id }, 'ANALYTICS_DELETE_QUERY');
+}
+
+export function updateDashboardLayout(dashboardId, positions) {
+  const mutation = `
+    mutation UpdateAnalyticsDashboardLayout($dashboardId: ID!, $positions: JSONString!) {
+      updateAnalyticsDashboardLayout(dashboardId: $dashboardId, positions: $positions) {
+        dashboard { id }
       }
     }
   `;
 
   return graphqlWithVariables(
     mutation,
-    { input },
-    'ANALYTICS_CREATE_DASHBOARD',
+    { dashboardId, positions: JSON.stringify(positions) },
+    'ANALYTICS_UPDATE_DASHBOARD_LAYOUT',
   );
 }
 

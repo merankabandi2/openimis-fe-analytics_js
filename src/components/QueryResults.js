@@ -14,7 +14,7 @@ import {
   LinearProgress,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useTranslations, useModulesManager, formatDateFromISO } from '@openimis/fe-core';
+import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { ROWS_PER_PAGE_OPTIONS } from '../constants';
 
 const useStyles = makeStyles((theme) => ({
@@ -37,6 +37,9 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 600,
     backgroundColor: theme.palette.grey[100],
   },
+  truncated: {
+    marginTop: theme.spacing(1),
+  },
   noData: {
     padding: theme.spacing(4),
     textAlign: 'center',
@@ -47,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
 const QueryResults = ({ results, entityType }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
-  const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
+  const { formatMessage, formatMessageWithValues, formatDateFromISO } = useTranslations('analytics', modulesManager);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(ROWS_PER_PAGE_OPTIONS[0]);
@@ -69,7 +72,7 @@ const QueryResults = ({ results, entityType }) => {
   if (!Array.isArray(data)) {
     data = [];
   }
-  const { rowCount, executionTime } = results;
+  const { rowCount, executionTime, truncated } = results;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -130,6 +133,11 @@ const QueryResults = ({ results, entityType }) => {
             variant="outlined"
           />
         </Box>
+        {truncated && (
+          <Typography variant="body2" color="error" className={classes.truncated}>
+            {formatMessageWithValues('queryResults.truncated', { count: rowCount })}
+          </Typography>
+        )}
       </Box>
 
       {!data || data.length === 0 ? (
@@ -176,6 +184,7 @@ const QueryResults = ({ results, entityType }) => {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             labelRowsPerPage={formatMessage('queryResults.rowsPerPage')}
+            labelDisplayedRows={({ from, to, count }) => formatMessageWithValues('pagination.displayedRows', { from, to, count })}
           />
         </>
       )}

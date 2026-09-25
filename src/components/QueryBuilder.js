@@ -29,13 +29,9 @@ import {
   GetApp as ExportIcon,
 } from '@material-ui/icons';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
-import {
-  ENTITY_TYPES,
-  FILTER_OPERATORS,
-  AGGREGATION_FUNCTIONS,
-  EXPORT_FORMATS,
-} from '../constants';
+import { ENTITY_TYPES, MAX_QUERY_ROWS } from '../constants';
 import { fetchEntityFields, executeQuery, exportData } from '../actions';
+import { aggregationName, buildQueryConfig } from '../utils/analytics';
 import FilterRow from './FilterRow';
 import AggregationRow from './AggregationRow';
 import QueryResults from './QueryResults';
@@ -64,6 +60,17 @@ const useStyles = makeStyles((theme) => ({
   resultsSection: {
     marginTop: theme.spacing(3),
   },
+  error: {
+    marginTop: theme.spacing(2),
+    padding: theme.spacing(2),
+    color: theme.palette.error.main,
+    borderLeft: `4px solid ${theme.palette.error.main}`,
+  },
+  notice: {
+    marginTop: theme.spacing(2),
+    padding: theme.spacing(2),
+    borderLeft: `4px solid ${theme.palette.primary.main}`,
+  },
 }));
 
 const QueryBuilder = ({
@@ -77,13 +84,16 @@ const QueryBuilder = ({
   exportData,
   entityFields,
   queryResults,
+  queryError,
   executingQuery,
   exporting,
   exportUrl,
+  exportRowCount,
+  exportError,
 }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
-  const { formatMessage } = useTranslations('analytics', modulesManager);
+  const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
 
   // Normalise inputs coming from SavedQueriesPage — the API exposes the entity_type
   // as an uppercased enum and seeded queries may use legacy "dimensions"/"measures"
@@ -137,27 +147,26 @@ const QueryBuilder = ({
   useEffect(() => {
     if (autoRun && !hasAutoRun && entityType) {
       setHasAutoRun(true);
-      const config = {
-        filters: filters.reduce((acc, f) => {
-          if (f.field && f.value !== '') {
-            acc[f.field] = { operator: f.operator, value: f.value };
-          }
-          return acc;
-        }, {}),
-        group_by: groupBy.length ? groupBy : undefined,
-        aggregations: aggregations.reduce((acc, a) => {
-          if (a.name) {
-            acc[a.name] = { function: a.function, field: a.field || 'id' };
-          }
-          return acc;
-        }, {}),
-        limit,
-      };
+      const config = buildQueryConfig({
+        filters, selectedFields, groupBy, aggregations, orderBy, limit,
+      });
       executeQuery(entityType, config);
     }
-  }, [autoRun, hasAutoRun, entityType, filters, groupBy, aggregations, limit, executeQuery]);
+  }, [autoRun, hasAutoRun, entityType, filters, selectedFields, groupBy, aggregations, orderBy, limit, executeQuery]);
 
   const fields = entityFields[entityType] || [];
+
+  // Sortable columns of the result: grouped fields (or all fields when not
+  // grouping) and the aggregation names, each ascending or descending.
+  const sortableColumns = [
+    ...(groupBy.length ? fields.filter((f) => groupBy.includes(f.name)) : fields)
+      .map((f) => ({ name: f.name, label: f.label })),
+    ...(groupBy.length ? aggregations.map((a) => ({ name: aggregationName(a), label: aggregationName(a) })) : []),
+  ];
+  const orderOptions = sortableColumns.flatMap((column) => [
+    { value: column.name, label: `${column.label} ${formatMessage('queryBuilder.ascending')}` },
+    { value: `-${column.name}`, label: `${column.label} ${formatMessage('queryBuilder.descending')}` },
+  ]);
 
   const handleEntityTypeChange = (event) => {
     setEntityType(event.target.value);
@@ -184,7 +193,7 @@ const QueryBuilder = ({
   };
 
   const handleAddAggregation = () => {
-    setAggregations([...aggregations, { name: '', function: 'count', field: '' }]);
+    setAggregations([...aggregations, { name: '', function: 'count', field: 'id' }]);
   };
 
   const handleUpdateAggregation = (index, aggregation) => {
@@ -197,44 +206,12 @@ const QueryBuilder = ({
     setAggregations(aggregations.filter((_, i) => i !== index));
   };
 
-  const buildQueryConfig = () => {
-    const config = {
-      filters: filters.reduce((acc, filter) => {
-        if (filter.field && filter.value !== '') {
-          acc[filter.field] = {
-            operator: filter.operator,
-            value: filter.value,
-          };
-        }
-        return acc;
-      }, {}),
-      fields: selectedFields.length > 0 ? selectedFields : undefined,
-      group_by: groupBy.length > 0 ? groupBy : undefined,
-      aggregations: aggregations.reduce((acc, agg) => {
-        if (agg.name && agg.field) {
-          acc[agg.name] = {
-            function: agg.function,
-            field: agg.field,
-          };
-        }
-        return acc;
-      }, {}),
-      order_by: orderBy.length > 0 ? orderBy : undefined,
-      limit,
-    };
-
-    // Remove undefined values
-    Object.keys(config).forEach((key) => {
-      if (config[key] === undefined || (typeof config[key] === 'object' && Object.keys(config[key]).length === 0)) {
-        delete config[key];
-      }
-    });
-
-    return config;
-  };
+  const currentQueryConfig = () => buildQueryConfig({
+    filters, selectedFields, groupBy, aggregations, orderBy, limit: limit || 1000,
+  });
 
   const handleRunQuery = () => {
-    const config = buildQueryConfig();
+    const config = currentQueryConfig();
     executeQuery(entityType, config);
     if (onExecute) {
       onExecute(entityType, config);
@@ -243,13 +220,13 @@ const QueryBuilder = ({
 
   const handleSaveQuery = () => {
     if (onSave) {
-      const config = buildQueryConfig();
+      const config = currentQueryConfig();
       onSave(entityType, config);
     }
   };
 
   const handleExport = (format) => {
-    const config = buildQueryConfig();
+    const config = currentQueryConfig();
     exportData(entityType, config, format);
   };
 
@@ -420,9 +397,9 @@ const QueryBuilder = ({
                         </Box>
                       )}
                     >
-                      {fields.map((field) => (
-                        <MenuItem key={field.name} value={field.name}>
-                          {field.label}
+                      {orderOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
                         </MenuItem>
                       ))}
                     </Select>
@@ -433,9 +410,12 @@ const QueryBuilder = ({
                     type="number"
                     label={formatMessage('queryBuilder.limit')}
                     value={limit}
-                    onChange={(e) => setLimit(parseInt(e.target.value, 10))}
+                    onChange={(e) => setLimit(
+                      e.target.value === '' ? '' : Math.min(MAX_QUERY_ROWS, Math.max(1, parseInt(e.target.value, 10) || 1)),
+                    )}
                     fullWidth
-                    InputProps={{ inputProps: { min: 1, max: 100000 } }}
+                    helperText={formatMessageWithValues('queryBuilder.limitHelp', { max: MAX_QUERY_ROWS })}
+                    InputProps={{ inputProps: { min: 1, max: MAX_QUERY_ROWS } }}
                   />
                 </Grid>
               </Grid>
@@ -481,17 +461,31 @@ const QueryBuilder = ({
                     <ExportIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={formatMessage('queryBuilder.exportPDF')}>
-                  <IconButton
-                    onClick={() => handleExport('pdf')}
-                    disabled={exporting}
-                  >
-                    <ExportIcon />
-                  </IconButton>
-                </Tooltip>
               </>
             )}
           </Box>
+
+          {queryError && (
+            <Paper className={classes.error} role="alert">
+              <Typography variant="body2">
+                {formatMessageWithValues('queryBuilder.queryError', { error: queryError })}
+              </Typography>
+            </Paper>
+          )}
+          {exportError && (
+            <Paper className={classes.error} role="alert">
+              <Typography variant="body2">
+                {formatMessageWithValues('queryBuilder.exportError', { error: exportError })}
+              </Typography>
+            </Paper>
+          )}
+          {exportUrl && exportRowCount !== null && (
+            <Paper className={classes.notice}>
+              <Typography variant="body2">
+                {formatMessageWithValues('queryBuilder.exportDone', { count: exportRowCount })}
+              </Typography>
+            </Paper>
+          )}
 
           {/* Query Results */}
           {queryResults && (
@@ -511,9 +505,12 @@ const QueryBuilder = ({
 const mapStateToProps = (state) => ({
   entityFields: state.analytics.entityFields,
   queryResults: state.analytics.queryResults,
+  queryError: state.analytics.queryError,
   executingQuery: state.analytics.executingQuery,
   exporting: state.analytics.exporting,
   exportUrl: state.analytics.exportUrl,
+  exportRowCount: state.analytics.exportRowCount,
+  exportError: state.analytics.exportError,
 });
 
 const mapDispatchToProps = {

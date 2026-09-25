@@ -10,11 +10,18 @@ import {
   FormControlLabel,
   Switch,
   Box,
+  Typography,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useTranslations, useModulesManager, withTooltip, Helmet } from '@openimis/fe-core';
 import QueryBuilder from '../components/QueryBuilder';
-import { createQuery } from '../actions';
+import { createQuery, updateQuery } from '../actions';
+import {
+  RIGHT_ANALYTICS_SAVE_QUERY,
+  RIGHT_ANALYTICS_SHARE,
+  RIGHT_ANALYTICS_UPDATE_QUERY,
+} from '../constants';
+import { graphqlErrorMessage, hasRight, requestErrorMessage } from '../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
   page: {
@@ -27,13 +34,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const QueryBuilderPage = ({ createQuery, history, location }) => {
+const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
-  const { formatMessage } = useTranslations('analytics', modulesManager);
+  const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
 
   // Incoming state from SavedQueriesPage (Run/Edit/Copy navigation).
   const incoming = (location && location.state) || {};
+  const editingQueryId = incoming.queryId || null;
+  const canSave = hasRight(rights, editingQueryId ? RIGHT_ANALYTICS_UPDATE_QUERY : RIGHT_ANALYTICS_SAVE_QUERY);
+  const canShare = hasRight(rights, RIGHT_ANALYTICS_SHARE);
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [queryName, setQueryName] = useState(incoming.queryName || '');
@@ -41,10 +51,13 @@ const QueryBuilderPage = ({ createQuery, history, location }) => {
   const [isPublic, setIsPublic] = useState(incoming.isPublic || false);
   const [currentConfig, setCurrentConfig] = useState(null);
   const [currentEntityType, setCurrentEntityType] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const handleSaveQuery = (entityType, queryConfig) => {
     setCurrentEntityType(entityType);
     setCurrentConfig(queryConfig);
+    setSaveError(null);
     setSaveDialogOpen(true);
   };
 
@@ -55,12 +68,22 @@ const QueryBuilderPage = ({ createQuery, history, location }) => {
         description: queryDescription,
         entityType: currentEntityType,
         queryConfig: JSON.stringify(currentConfig),
-        isPublic,
+        // Without the share right the public flag keeps its saved value.
+        isPublic: canShare ? isPublic : Boolean(editingQueryId && incoming.isPublic),
       };
-      
-      await createQuery(input);
+
+      setSaving(true);
+      const action = editingQueryId ? await updateQuery(editingQueryId, input) : await createQuery(input);
+      setSaving(false);
+      // fe-core resolves failed requests too: a GraphQL refusal comes back with
+      // `errors`, a network/HTTP failure as an error action.
+      const error = graphqlErrorMessage(action && action.payload)
+        || (action && action.error ? requestErrorMessage(action.payload) || 'error' : null);
+      if (error) {
+        setSaveError(error);
+        return;
+      }
       setSaveDialogOpen(false);
-      // Redirect to saved queries page
       history.push('/analytics/saved-queries');
     }
   };
@@ -78,7 +101,7 @@ const QueryBuilderPage = ({ createQuery, history, location }) => {
         entityType={incoming.entityType}
         queryConfig={incoming.queryConfig}
         autoRun={Boolean(incoming.autoRun)}
-        onSave={handleSaveQuery}
+        onSave={canSave ? handleSaveQuery : null}
         onExecute={handleExecuteQuery}
       />
 
@@ -108,15 +131,22 @@ const QueryBuilderPage = ({ createQuery, history, location }) => {
               multiline
               rows={3}
             />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isPublic}
-                  onChange={(e) => setIsPublic(e.target.checked)}
-                />
-              }
-              label={formatMessage('queryBuilder.makePublic')}
-            />
+            {canShare && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPublic}
+                    onChange={(e) => setIsPublic(e.target.checked)}
+                  />
+                }
+                label={formatMessage('queryBuilder.makePublic')}
+              />
+            )}
+            {saveError && (
+              <Typography variant="body2" color="error" role="alert">
+                {formatMessageWithValues('queryBuilder.saveError', { error: saveError })}
+              </Typography>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
@@ -127,7 +157,7 @@ const QueryBuilderPage = ({ createQuery, history, location }) => {
             onClick={handleConfirmSave}
             color="primary"
             variant="contained"
-            disabled={!queryName}
+            disabled={!queryName || saving}
           >
             {formatMessage('common.save')}
           </Button>
@@ -137,10 +167,15 @@ const QueryBuilderPage = ({ createQuery, history, location }) => {
   );
 };
 
+const mapStateToProps = (state) => ({
+  rights: state.core?.user?.i_user?.rights || [],
+});
+
 const mapDispatchToProps = {
   createQuery,
+  updateQuery,
 };
 
 export default withTooltip(
-  connect(null, mapDispatchToProps)(QueryBuilderPage)
+  connect(mapStateToProps, mapDispatchToProps)(QueryBuilderPage)
 );
