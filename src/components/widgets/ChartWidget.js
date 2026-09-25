@@ -23,7 +23,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { CHART_COLORS } from '../../constants';
+import { pickChartKeys } from '../../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -43,8 +45,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const ChartWidget = ({ title, data, config, widgetType, loading }) => {
+const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) => {
   const classes = useStyles();
+  const modulesManager = useModulesManager();
+  const { formatMessage } = useTranslations('analytics', modulesManager);
 
   if (loading) {
     return (
@@ -57,11 +61,20 @@ const ChartWidget = ({ title, data, config, widgetType, loading }) => {
   }
 
   const renderChart = () => {
+    if (error) {
+      return (
+        <Box className={classes.loading}>
+          <Typography variant="body2" color="error">
+            {error}
+          </Typography>
+        </Box>
+      );
+    }
     if (!data || data.length === 0) {
       return (
         <Box className={classes.loading}>
           <Typography variant="body2" color="textSecondary">
-            No data available
+            {formatMessage('widget.noData')}
           </Typography>
         </Box>
       );
@@ -80,13 +93,13 @@ const ChartWidget = ({ title, data, config, widgetType, loading }) => {
   };
 
   const renderBarChart = () => {
-    const dataKey = config.dataKey || Object.keys(data[0]).find(key => key !== config.xAxisKey);
-    
+    const { valueKey: dataKey, categoryKey } = pickChartKeys(data, config, 'xAxisKey');
+
     return (
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey={config.xAxisKey || Object.keys(data[0])[0]} />
+          <XAxis dataKey={categoryKey} />
           <YAxis />
           <Tooltip />
           {config.showLegend && <Legend />}
@@ -101,13 +114,13 @@ const ChartWidget = ({ title, data, config, widgetType, loading }) => {
   };
 
   const renderLineChart = () => {
-    const dataKey = config.dataKey || Object.keys(data[0]).find(key => key !== config.xAxisKey);
-    
+    const { valueKey: dataKey, categoryKey } = pickChartKeys(data, config, 'xAxisKey');
+
     return (
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey={config.xAxisKey || Object.keys(data[0])[0]} />
+          <XAxis dataKey={categoryKey} />
           <YAxis />
           <Tooltip />
           {config.showLegend && <Legend />}
@@ -124,9 +137,8 @@ const ChartWidget = ({ title, data, config, widgetType, loading }) => {
   };
 
   const renderPieChart = () => {
-    const dataKey = config.dataKey || Object.keys(data[0]).find(key => key !== config.nameKey);
-    const nameKey = config.nameKey || Object.keys(data[0])[0];
-    
+    const { valueKey: dataKey, categoryKey: nameKey } = pickChartKeys(data, config, 'nameKey');
+
     return (
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>

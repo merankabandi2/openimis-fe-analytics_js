@@ -17,9 +17,10 @@ import {
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { GetApp as DownloadIcon } from '@material-ui/icons';
-import { useTranslations, useModulesManager, Helmet, formatDateFromISO } from '@openimis/fe-core';
+import { useTranslations, useModulesManager, Helmet, decodeId } from '@openimis/fe-core';
 import { fetchExports } from '../actions';
-import { EXPORT_FORMATS, DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS } from '../constants';
+import { DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS } from '../constants';
+import { pageArgs } from '../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -35,6 +36,11 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 600,
     backgroundColor: theme.palette.grey[100],
   },
+  error: {
+    marginBottom: theme.spacing(2),
+    padding: theme.spacing(2),
+    color: theme.palette.error.main,
+  },
 }));
 
 const ExportHistoryPage = ({
@@ -42,20 +48,17 @@ const ExportHistoryPage = ({
   exports,
   exportsPageInfo,
   fetchingExports,
+  errorExports,
 }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
-  const { formatMessage } = useTranslations('analytics', modulesManager);
+  const { formatMessage, formatMessageWithValues, formatDateFromISO } = useTranslations('analytics', modulesManager);
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
-    fetchExports({
-      first: rowsPerPage,
-      after: page * rowsPerPage,
-      orderBy: ['-exportedAt'],
-    });
+    fetchExports(pageArgs({ page, rowsPerPage, orderBy: ['-exportedAt'] }));
   }, [fetchExports, page, rowsPerPage]);
 
   const handleChangePage = (event, newPage) => {
@@ -68,17 +71,17 @@ const ExportHistoryPage = ({
   };
 
   const handleDownload = (exportRecord) => {
-    window.open(`/api/analytics/download/${exportRecord.id}/`, '_blank');
+    // The download route takes the raw UUID, not the Relay id the list returns.
+    window.open(`/api/analytics/download/${decodeId(exportRecord.id)}/`, '_blank');
   };
 
+  // GraphQL returns the format choice as an uppercase enum name (EXCEL, CSV).
   const getFormatColor = (format) => {
-    switch (format) {
+    switch ((format || '').toLowerCase()) {
       case 'excel':
         return 'primary';
       case 'csv':
         return 'secondary';
-      case 'pdf':
-        return 'default';
       default:
         return 'default';
     }
@@ -93,6 +96,12 @@ const ExportHistoryPage = ({
           {formatMessage('exportHistory.title')}
         </Typography>
       </Box>
+
+      {errorExports && (
+        <Paper className={classes.error} role="alert">
+          <Typography variant="body2">{errorExports}</Typography>
+        </Paper>
+      )}
 
       <TableContainer component={Paper} className={classes.tableContainer}>
         <Table stickyHeader>
@@ -158,6 +167,8 @@ const ExportHistoryPage = ({
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage={formatMessage('queryResults.rowsPerPage')}
+        labelDisplayedRows={({ from, to, count }) => formatMessageWithValues('pagination.displayedRows', { from, to, count })}
       />
     </div>
   );
@@ -167,6 +178,7 @@ const mapStateToProps = (state) => ({
   exports: state.analytics.exports,
   exportsPageInfo: state.analytics.exportsPageInfo,
   fetchingExports: state.analytics.fetchingExports,
+  errorExports: state.analytics.errorExports,
 });
 
 const mapDispatchToProps = {

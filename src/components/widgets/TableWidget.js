@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { formatDateFromISO } from '@openimis/fe-core';
+import { useTranslations, useModulesManager } from '@openimis/fe-core';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -47,8 +47,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const TableWidget = ({ title, data, config, loading }) => {
+const TableWidget = ({ title, data, config, loading, error }) => {
   const classes = useStyles();
+  const modulesManager = useModulesManager();
+  const { formatMessage, formatDateFromISO } = useTranslations('analytics', modulesManager);
 
   if (loading) {
     return (
@@ -60,12 +62,14 @@ const TableWidget = ({ title, data, config, loading }) => {
     );
   }
 
-  if (!data || data.length === 0) {
+  if (error || !data || data.length === 0) {
     return (
       <Card className={classes.root}>
         <CardHeader title={title} />
         <CardContent className={classes.noData}>
-          <Typography variant="body2">No data available</Typography>
+          <Typography variant="body2" color={error ? 'error' : 'inherit'}>
+            {error || formatMessage('widget.noData')}
+          </Typography>
         </CardContent>
       </Card>
     );

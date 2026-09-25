@@ -13,7 +13,7 @@ import {
 import { Delete as DeleteIcon } from '@material-ui/icons';
 import { DatePicker } from '@material-ui/pickers';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
-import { FILTER_OPERATORS } from '../constants';
+import { toLocalDateString } from '../utils/analytics';
 
 const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
   const modulesManager = useModulesManager();
@@ -116,8 +116,8 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
           <DatePicker
             label={formatMessage('filter.value')}
             value={filter.value || null}
-            onChange={handleValueChange}
-            format="yyyy-MM-dd"
+            onChange={(date) => handleValueChange(toLocalDateString(date))}
+            format="YYYY-MM-DD"
             fullWidth
           />
         );
