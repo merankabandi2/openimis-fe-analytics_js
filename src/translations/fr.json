@@ -101,6 +101,7 @@
   "analytics.queryBuilder.exportError": "L'export a échoué : {error}",
   "analytics.queryBuilder.exportDone": "{count} lignes exportées",
   "analytics.queryBuilder.saveError": "L'enregistrement a échoué : {error}",
+  "analytics.queryBuilder.noRight": "Le constructeur de requêtes demande le droit d'exécuter des requêtes analytiques (200002).",
   "analytics.queryResults.truncated": "Résultat tronqué : seules les {count} premières lignes sont affichées. Ajoutez des filtres ou un regroupement.",
   "analytics.pagination.displayedRows": "{from}–{to} sur {count}",
   "analytics.savedQueries.deleteTitle": "Supprimer la requête",

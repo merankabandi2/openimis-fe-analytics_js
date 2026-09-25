@@ -101,6 +101,7 @@
   "analytics.queryBuilder.exportError": "The export failed: {error}",
   "analytics.queryBuilder.exportDone": "{count} rows exported",
   "analytics.queryBuilder.saveError": "Saving failed: {error}",
+  "analytics.queryBuilder.noRight": "The query builder needs the right to run analytics queries (200002).",
   "analytics.queryResults.truncated": "Result truncated: only the first {count} rows are shown. Add filters or grouping.",
   "analytics.pagination.displayedRows": "{from}–{to} of {count}",
   "analytics.savedQueries.deleteTitle": "Delete query",

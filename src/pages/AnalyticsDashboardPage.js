@@ -25,9 +25,11 @@ import {
   fetchDashboards, fetchDashboard, executeWidget, updateDashboardLayout,
 } from '../actions';
 import {
-  graphqlErrorMessage, layoutPositions, pageArgs, parseJson, requestErrorMessage, widgetLayout,
+  graphqlErrorMessage, hasRight, layoutPositions, pageArgs, parseJson, requestErrorMessage, widgetLayout,
 } from '../utils/analytics';
-import { GRID_COLS, GRID_ROW_HEIGHT, GRID_MARGIN, GRID_CONTAINER_PADDING } from '../constants';
+import {
+  GRID_COLS, GRID_ROW_HEIGHT, GRID_MARGIN, GRID_CONTAINER_PADDING, RIGHT_ANALYTICS_CREATE_QUERY,
+} from '../constants';
 import MetricWidget from '../components/widgets/MetricWidget';
 import ChartWidget from '../components/widgets/ChartWidget';
 import TableWidget from '../components/widgets/TableWidget';
@@ -88,6 +90,7 @@ const AnalyticsDashboardPage = ({
   fetchingDashboard,
   errorDashboards,
   errorDashboard,
+  rights,
   history,
 }) => {
   const classes = useStyles();
@@ -322,13 +325,15 @@ const AnalyticsDashboardPage = ({
         </Box>
       )}
 
-      <Fab
-        className={classes.fab}
-        color="primary"
-        onClick={() => history.push('/analytics/query-builder')}
-      >
-        <AddIcon />
-      </Fab>
+      {hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY) && (
+        <Fab
+          className={classes.fab}
+          color="primary"
+          onClick={() => history.push('/analytics/query-builder')}
+        >
+          <AddIcon />
+        </Fab>
+      )}
     </div>
   );
 };
@@ -340,6 +345,7 @@ const mapStateToProps = (state) => ({
   fetchingDashboard: state.analytics.fetchingDashboard,
   errorDashboards: state.analytics.errorDashboards,
   errorDashboard: state.analytics.errorDashboard,
+  rights: state.core?.user?.i_user?.rights || [],
 });
 
 const mapDispatchToProps = {

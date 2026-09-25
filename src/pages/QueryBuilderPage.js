@@ -17,6 +17,7 @@ import { useTranslations, useModulesManager, withTooltip, Helmet } from '@openim
 import QueryBuilder from '../components/QueryBuilder';
 import { createQuery, updateQuery } from '../actions';
 import {
+  RIGHT_ANALYTICS_CREATE_QUERY,
   RIGHT_ANALYTICS_SAVE_QUERY,
   RIGHT_ANALYTICS_SHARE,
   RIGHT_ANALYTICS_UPDATE_QUERY,
@@ -92,6 +93,17 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
     // Query execution is handled by the QueryBuilder component
     console.log('Query executed:', entityType, queryConfig);
   };
+
+  if (!hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY)) {
+    return (
+      <div className={classes.page}>
+        <Helmet title={formatMessage('queryBuilder.pageTitle')} />
+        <Typography variant="body1" color="error" role="alert">
+          {formatMessage('queryBuilder.noRight')}
+        </Typography>
+      </div>
+    );
+  }
 
   return (
     <div className={classes.page}>
