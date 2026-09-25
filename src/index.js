@@ -59,7 +59,7 @@ const DEFAULT_CONFIG = {
       text: <FormattedMessage module="analytics" id="menu.analytics.savedQueries" />,
       icon: <SaveAlt />,
       route: `/${SAVED_QUERIES_ROUTE}`,
-      filter: (rights) => rights.includes(RIGHT_ANALYTICS_VIEW),
+      filter: (rights) => rights.includes(RIGHT_ANALYTICS_CREATE_QUERY),
       id: 'analytics.savedQueries',
     },
     {

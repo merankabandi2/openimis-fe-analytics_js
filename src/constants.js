@@ -1,12 +1,14 @@
 // Module name
 export const MODULE_NAME = 'analytics';
 
-// Rights/Permissions
-export const RIGHT_ANALYTICS_VIEW = '200001';
-export const RIGHT_ANALYTICS_CREATE_QUERY = '200002';
-export const RIGHT_ANALYTICS_EXPORT = '200003';
-export const RIGHT_ANALYTICS_CREATE_DASHBOARD = '200004';
-export const RIGHT_ANALYTICS_SHARE = '200005';
+// Rights/Permissions. fe-core hands menu filters the user's rights as numbers.
+export const RIGHT_ANALYTICS_VIEW = 200001;
+export const RIGHT_ANALYTICS_CREATE_QUERY = 200002;
+export const RIGHT_ANALYTICS_EXPORT = 200003;
+export const RIGHT_ANALYTICS_CREATE_DASHBOARD = 200004;
+export const RIGHT_ANALYTICS_SHARE = 200005;
+export const RIGHT_ANALYTICS_SAVE_QUERY = 200006;
+export const RIGHT_ANALYTICS_UPDATE_QUERY = 200007;
 
 // Routes
 export const ANALYTICS_DASHBOARD_ROUTE = 'analytics/dashboard';
@@ -38,7 +40,6 @@ export const WIDGET_TYPES = {
 export const EXPORT_FORMATS = {
   EXCEL: 'excel',
   CSV: 'csv',
-  PDF: 'pdf',
 };
 
 // Aggregation Functions
@@ -70,6 +71,8 @@ export const FILTER_OPERATORS = {
 
 // Default values
 export const DEFAULT_PAGE_SIZE = 20;
+// Server default of analytics_max_query_rows.
+export const MAX_QUERY_ROWS = 10000;
 export const DEFAULT_DEBOUNCE_TIME = 500;
 export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
 
