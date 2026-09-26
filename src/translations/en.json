@@ -163,7 +163,7 @@
   "analytics.widgetType.pie_chart": "Pie chart",
   "analytics.widgetType.table": "Table",
   "analytics.widgetType.metric": "Single metric",
-  "analytics.queryResults.restrictedRowsWithheld": "Restricted grievances that match the filters are not included: the query reads fields hidden from you on them. Select only visible fields under \"Fields\", or group the results.",
+  "analytics.queryResults.restrictedRowsWithheld": "Restricted grievances, some of which may match the filters, are not included: the query reads fields hidden from you on them. Select only visible fields under \"Fields\", or group the results.",
   "analytics.error.editOwnDashboards": "Only the author of a dashboard can change it.",
   "analytics.error.defaultDashboard": "The default dashboard cannot be deleted.",
   "analytics.error.queryNotVisible": "This query is not available to you."

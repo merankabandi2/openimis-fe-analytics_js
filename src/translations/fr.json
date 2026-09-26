@@ -163,7 +163,7 @@
   "analytics.widgetType.pie_chart": "Camembert",
   "analytics.widgetType.table": "Tableau",
   "analytics.widgetType.metric": "Indicateur (valeur unique)",
-  "analytics.queryResults.restrictedRowsWithheld": "Des plaintes à accès restreint qui correspondent aux filtres ne sont pas incluses : la requête lit des champs qui vous sont masqués pour ces plaintes. Choisissez uniquement des champs visibles dans « Champs », ou regroupez les résultats.",
+  "analytics.queryResults.restrictedRowsWithheld": "Des plaintes à accès restreint, dont certaines peuvent correspondre aux filtres, ne sont pas incluses : la requête lit des champs qui vous sont masqués pour ces plaintes. Choisissez uniquement des champs visibles dans « Champs », ou regroupez les résultats.",
   "analytics.error.editOwnDashboards": "Seul l'auteur d'un tableau de bord peut le modifier.",
   "analytics.error.defaultDashboard": "Le tableau de bord par défaut ne peut pas être supprimé.",
   "analytics.error.queryNotVisible": "Cette requête ne vous est pas accessible."
