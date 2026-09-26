@@ -19,8 +19,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import { GetApp as DownloadIcon } from '@material-ui/icons';
 import { useTranslations, useModulesManager, Helmet, decodeId } from '@openimis/fe-core';
 import { fetchExports } from '../actions';
-import { DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS } from '../constants';
-import { pageArgs } from '../utils/analytics';
+import { DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS, RIGHT_ANALYTICS_EXPORT } from '../constants';
+import { hasRight, localiseError, pageArgs } from '../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,17 +49,20 @@ const ExportHistoryPage = ({
   exportsPageInfo,
   fetchingExports,
   errorExports,
+  rights,
 }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues, formatDateFromISO } = useTranslations('analytics', modulesManager);
+  const allowed = hasRight(rights, RIGHT_ANALYTICS_EXPORT);
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
+    if (!allowed) return;
     fetchExports(pageArgs({ page, rowsPerPage, orderBy: ['-exportedAt'] }));
-  }, [fetchExports, page, rowsPerPage]);
+  }, [fetchExports, page, rowsPerPage, allowed]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -87,6 +90,17 @@ const ExportHistoryPage = ({
     }
   };
 
+  if (!allowed) {
+    return (
+      <div className={classes.root}>
+        <Helmet title={formatMessage('exportHistory.pageTitle')} />
+        <Typography variant="body1" color="error" role="alert">
+          {formatMessage('exportHistory.noRight')}
+        </Typography>
+      </div>
+    );
+  }
+
   return (
     <div className={classes.root}>
       <Helmet title={formatMessage('exportHistory.pageTitle')} />
@@ -99,7 +113,9 @@ const ExportHistoryPage = ({
 
       {errorExports && (
         <Paper className={classes.error} role="alert">
-          <Typography variant="body2">{errorExports}</Typography>
+          <Typography variant="body2">
+            {localiseError(errorExports, formatMessage, formatMessageWithValues)}
+          </Typography>
         </Paper>
       )}
 
@@ -179,6 +195,7 @@ const mapStateToProps = (state) => ({
   exportsPageInfo: state.analytics.exportsPageInfo,
   fetchingExports: state.analytics.fetchingExports,
   errorExports: state.analytics.errorExports,
+  rights: state.core?.user?.i_user?.rights || [],
 });
 
 const mapDispatchToProps = {

@@ -25,7 +25,9 @@ import {
 } from 'recharts';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { CHART_COLORS } from '../../constants';
-import { pickChartKeys } from '../../utils/analytics';
+import {
+  chartDisplay, pickChartKeys, shortLabel, withCategoryLabels,
+} from '../../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,6 +51,8 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations('analytics', modulesManager);
+  const display = chartDisplay(config, widgetType);
+  const emptyCategory = formatMessage('widget.emptyCategory');
 
   if (loading) {
     return (
@@ -92,17 +96,27 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
     }
   };
 
+  // Every category gets a tick; long labels are slanted and shortened, and the
+  // tooltip shows the full label.
   const renderBarChart = () => {
     const { valueKey: dataKey, categoryKey } = pickChartKeys(data, config, 'xAxisKey');
 
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <BarChart data={withCategoryLabels(data, categoryKey, emptyCategory)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey={categoryKey} />
+          <XAxis
+            dataKey={categoryKey}
+            interval={0}
+            angle={-35}
+            textAnchor="end"
+            height={90}
+            tick={{ fontSize: 11 }}
+            tickFormatter={shortLabel}
+          />
           <YAxis />
           <Tooltip />
-          {config.showLegend && <Legend />}
+          {display.legend && <Legend />}
           <Bar
             dataKey={dataKey}
             fill={config.color || CHART_COLORS[0]}
@@ -118,12 +132,12 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
 
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <LineChart data={withCategoryLabels(data, categoryKey, emptyCategory)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={categoryKey} />
           <YAxis />
           <Tooltip />
-          {config.showLegend && <Legend />}
+          {display.legend && <Legend />}
           <Line
             type="monotone"
             dataKey={dataKey}
@@ -143,11 +157,11 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={withCategoryLabels(data, nameKey, emptyCategory)}
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={config.showLabels}
+            label={display.labels}
             outerRadius={80}
             fill="#8884d8"
             dataKey={dataKey}
@@ -158,7 +172,7 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
             ))}
           </Pie>
           <Tooltip />
-          {config.showLegend && <Legend />}
+          {display.legend && <Legend />}
         </PieChart>
       </ResponsiveContainer>
     );

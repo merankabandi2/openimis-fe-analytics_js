@@ -22,7 +22,9 @@ import {
   RIGHT_ANALYTICS_SHARE,
   RIGHT_ANALYTICS_UPDATE_QUERY,
 } from '../constants';
-import { graphqlErrorMessage, hasRight, requestErrorMessage } from '../utils/analytics';
+import {
+  graphqlErrorMessage, hasRight, localiseError, requestErrorMessage,
+} from '../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
   page: {
@@ -156,7 +158,7 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
             )}
             {saveError && (
               <Typography variant="body2" color="error" role="alert">
-                {formatMessageWithValues('queryBuilder.saveError', { error: saveError })}
+                {formatMessageWithValues('queryBuilder.saveError', { error: localiseError(saveError, formatMessage, formatMessageWithValues) })}
               </Typography>
             )}
           </Box>

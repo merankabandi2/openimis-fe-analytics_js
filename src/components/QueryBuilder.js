@@ -31,7 +31,7 @@ import {
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { ENTITY_TYPES, MAX_QUERY_ROWS } from '../constants';
 import { fetchEntityFields, executeQuery, exportData } from '../actions';
-import { aggregationName, buildQueryConfig } from '../utils/analytics';
+import { aggregationName, buildQueryConfig, localiseError } from '../utils/analytics';
 import FilterRow from './FilterRow';
 import AggregationRow from './AggregationRow';
 import QueryResults from './QueryResults';
@@ -94,6 +94,7 @@ const QueryBuilder = ({
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
+  const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
 
   // Normalise inputs coming from SavedQueriesPage — the API exposes the entity_type
   // as an uppercased enum and seeded queries may use legacy "dimensions"/"measures"
@@ -468,14 +469,14 @@ const QueryBuilder = ({
           {queryError && (
             <Paper className={classes.error} role="alert">
               <Typography variant="body2">
-                {formatMessageWithValues('queryBuilder.queryError', { error: queryError })}
+                {formatMessageWithValues('queryBuilder.queryError', { error: localise(queryError) })}
               </Typography>
             </Paper>
           )}
           {exportError && (
             <Paper className={classes.error} role="alert">
               <Typography variant="body2">
-                {formatMessageWithValues('queryBuilder.exportError', { error: exportError })}
+                {formatMessageWithValues('queryBuilder.exportError', { error: localise(exportError) })}
               </Typography>
             </Paper>
           )}
