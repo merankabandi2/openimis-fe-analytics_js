@@ -56,6 +56,7 @@ export function executeQuery(entityType, queryConfig) {
         data
         rowCount
         truncated
+        restrictedRowsWithheld
         executionTime
       }
     }
@@ -213,6 +214,74 @@ export function updateDashboardLayout(dashboardId, positions) {
     { dashboardId, positions: JSON.stringify(positions) },
     'ANALYTICS_UPDATE_DASHBOARD_LAYOUT',
   );
+}
+
+// Dashboards the caller owns (200004); making one public needs 200005.
+export function createDashboard(input) {
+  const mutation = `
+    mutation CreateAnalyticsDashboard($input: AnalyticsDashboardInput!) {
+      createAnalyticsDashboard(input: $input) {
+        dashboard { id name isPublic }
+      }
+    }
+  `;
+
+  return graphqlWithVariables(mutation, { input }, 'ANALYTICS_CREATE_DASHBOARD');
+}
+
+export function updateDashboard(id, input) {
+  const mutation = `
+    mutation UpdateAnalyticsDashboard($id: ID!, $input: AnalyticsDashboardInput!) {
+      updateAnalyticsDashboard(id: $id, input: $input) {
+        dashboard { id name isPublic }
+      }
+    }
+  `;
+
+  return graphqlWithVariables(mutation, { id, input }, 'ANALYTICS_UPDATE_DASHBOARD');
+}
+
+export function deleteDashboard(id) {
+  const mutation = `
+    mutation DeleteAnalyticsDashboard($id: ID!) {
+      deleteAnalyticsDashboard(id: $id) {
+        success
+      }
+    }
+  `;
+
+  return graphqlWithVariables(mutation, { id }, 'ANALYTICS_DELETE_DASHBOARD');
+}
+
+// Adds a widget showing a saved query to a dashboard the caller may edit.
+export function addWidget(dashboardId, queryId, widgetType, title) {
+  const mutation = `
+    mutation AddAnalyticsWidget($dashboardId: ID!, $queryId: ID!, $widgetType: String!, $title: String!) {
+      addAnalyticsWidget(dashboardId: $dashboardId, queryId: $queryId, widgetType: $widgetType, title: $title) {
+        widget { id }
+      }
+    }
+  `;
+
+  return graphqlWithVariables(
+    mutation,
+    {
+      dashboardId, queryId, widgetType, title,
+    },
+    'ANALYTICS_ADD_WIDGET',
+  );
+}
+
+export function deleteWidget(id) {
+  const mutation = `
+    mutation DeleteAnalyticsWidget($id: ID!) {
+      deleteAnalyticsWidget(id: $id) {
+        success
+      }
+    }
+  `;
+
+  return graphqlWithVariables(mutation, { id }, 'ANALYTICS_DELETE_WIDGET');
 }
 
 // Clear actions

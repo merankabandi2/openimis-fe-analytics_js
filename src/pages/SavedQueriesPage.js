@@ -20,6 +20,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  TextField,
+  MenuItem,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {
@@ -28,13 +30,18 @@ import {
   FileCopy as CopyIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
+  PlaylistAdd as AddToDashboardIcon,
 } from '@material-ui/icons';
 import { useTranslations, useModulesManager, Helmet } from '@openimis/fe-core';
-import { fetchQueries, deleteQuery } from '../actions';
+import {
+  fetchQueries, deleteQuery, fetchDashboards, addWidget,
+} from '../actions';
 import {
   DEFAULT_PAGE_SIZE,
   ROWS_PER_PAGE_OPTIONS,
   RIGHT_ANALYTICS_CREATE_QUERY,
+  RIGHT_ANALYTICS_CREATE_DASHBOARD,
+  WIDGET_TYPES,
 } from '../constants';
 import {
   graphqlErrorMessage, hasRight, localiseError, pageArgs, parseJson, requestErrorMessage,
@@ -73,13 +80,22 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+// Widget types the dashboard page draws.
+const ADDABLE_WIDGET_TYPES = [
+  WIDGET_TYPES.BAR_CHART, WIDGET_TYPES.LINE_CHART, WIDGET_TYPES.PIE_CHART, WIDGET_TYPES.TABLE, WIDGET_TYPES.METRIC,
+];
+
 const SavedQueriesPage = ({
   fetchQueries,
   deleteQuery,
+  fetchDashboards,
+  addWidget,
   queries,
   queriesPageInfo,
   fetchingQueries,
   errorQueries,
+  dashboards,
+  fetchingDashboards,
   rights,
   history,
 }) => {
@@ -93,6 +109,12 @@ const SavedQueriesPage = ({
   const [deleteError, setDeleteError] = React.useState(null);
   const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
   const allowed = hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY);
+  const canAddToDashboard = hasRight(rights, RIGHT_ANALYTICS_CREATE_DASHBOARD);
+  // { query, dashboardId, widgetType, title } while the add-to-dashboard dialog is open.
+  const [widgetForm, setWidgetForm] = React.useState(null);
+  const [widgetError, setWidgetError] = React.useState(null);
+  const [addingWidget, setAddingWidget] = React.useState(false);
+  const editableDashboards = (dashboards || []).filter((d) => d.canEdit);
 
   const loadPage = React.useCallback(() => {
     fetchQueries(pageArgs({ page, rowsPerPage, orderBy: ['-validityFrom'] }));
@@ -173,6 +195,29 @@ const SavedQueriesPage = ({
 
   const handleCreateNew = () => {
     history.push('/analytics/query-builder');
+  };
+
+  const handleOpenAddToDashboard = (query) => {
+    setWidgetError(null);
+    setWidgetForm({
+      query, dashboardId: '', widgetType: WIDGET_TYPES.BAR_CHART, title: query.name || '',
+    });
+    fetchDashboards(pageArgs({ rowsPerPage: 100 }));
+  };
+
+  const handleConfirmAddToDashboard = async () => {
+    setAddingWidget(true);
+    const action = await addWidget(
+      widgetForm.dashboardId, widgetForm.query.id, widgetForm.widgetType, widgetForm.title.trim(),
+    );
+    setAddingWidget(false);
+    const error = graphqlErrorMessage(action && action.payload)
+      || (action && action.error ? requestErrorMessage(action.payload) || 'error' : null);
+    if (error) {
+      setWidgetError(error);
+      return;
+    }
+    history.push({ pathname: '/analytics/dashboard', state: { dashboardId: widgetForm.dashboardId } });
   };
 
   if (!allowed) {
@@ -264,6 +309,17 @@ const SavedQueriesPage = ({
                         </IconButton>
                       </Tooltip>
                     )}
+                    {canAddToDashboard && (
+                      <Tooltip title={formatMessage('savedQueries.addToDashboard')}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenAddToDashboard(query)}
+                          aria-label={formatMessage('savedQueries.addToDashboard')}
+                        >
+                          <AddToDashboardIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     <Tooltip title={formatMessage('savedQueries.copy')}>
                       <IconButton
                         size="small"
@@ -322,6 +378,66 @@ const SavedQueriesPage = ({
         </DialogActions>
       </Dialog>
 
+      <Dialog open={Boolean(widgetForm)} onClose={() => setWidgetForm(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{formatMessage('savedQueries.addToDashboardTitle')}</DialogTitle>
+        {widgetForm && (
+          <DialogContent>
+            {!fetchingDashboards && editableDashboards.length === 0 ? (
+              <Typography variant="body2">{formatMessage('savedQueries.noEditableDashboard')}</Typography>
+            ) : (
+              <Box display="flex" flexDirection="column" gap={2} mt={1}>
+                <TextField
+                  select
+                  label={formatMessage('savedQueries.dashboard')}
+                  value={widgetForm.dashboardId}
+                  onChange={(e) => setWidgetForm({ ...widgetForm, dashboardId: e.target.value })}
+                  fullWidth
+                  required
+                >
+                  {editableDashboards.map((dashboard) => (
+                    <MenuItem key={dashboard.id} value={dashboard.id}>{dashboard.name}</MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  label={formatMessage('savedQueries.widgetType')}
+                  value={widgetForm.widgetType}
+                  onChange={(e) => setWidgetForm({ ...widgetForm, widgetType: e.target.value })}
+                  fullWidth
+                >
+                  {ADDABLE_WIDGET_TYPES.map((type) => (
+                    <MenuItem key={type} value={type}>{formatMessage(`widgetType.${type}`)}</MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  label={formatMessage('savedQueries.widgetTitle')}
+                  value={widgetForm.title}
+                  onChange={(e) => setWidgetForm({ ...widgetForm, title: e.target.value })}
+                  fullWidth
+                  required
+                />
+              </Box>
+            )}
+            {widgetError && (
+              <Typography variant="body2" color="error" role="alert">
+                {formatMessageWithValues('savedQueries.addToDashboardError', { error: localise(widgetError) })}
+              </Typography>
+            )}
+          </DialogContent>
+        )}
+        <DialogActions>
+          <Button onClick={() => setWidgetForm(null)}>{formatMessage('common.cancel')}</Button>
+          <Button
+            onClick={handleConfirmAddToDashboard}
+            color="primary"
+            variant="contained"
+            disabled={!widgetForm || !widgetForm.dashboardId || !widgetForm.title.trim() || addingWidget}
+          >
+            {formatMessage('savedQueries.addToDashboardConfirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Fab
         className={classes.fab}
         color="primary"
@@ -338,12 +454,16 @@ const mapStateToProps = (state) => ({
   queriesPageInfo: state.analytics.queriesPageInfo,
   fetchingQueries: state.analytics.fetchingQueries,
   errorQueries: state.analytics.errorQueries,
+  dashboards: state.analytics.dashboards,
+  fetchingDashboards: state.analytics.fetchingDashboards,
   rights: state.core?.user?.i_user?.rights || [],
 });
 
 const mapDispatchToProps = {
   fetchQueries,
   deleteQuery,
+  fetchDashboards,
+  addWidget,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SavedQueriesPage);

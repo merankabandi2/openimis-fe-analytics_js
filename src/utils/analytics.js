@@ -142,7 +142,10 @@ const BACKEND_ERRORS = [
   { pattern: /^This dashboard is not visible to you$/, id: 'error.dashboardNotVisible' },
   { pattern: /^The query of this widget has been deleted$/, id: 'error.widgetQueryDeleted' },
   { pattern: /^You can only change the layout of your own dashboards$/, id: 'error.layoutOwnDashboards' },
-  { pattern: /^Making a query public requires the analytics share right$/, id: 'error.shareRight' },
+  { pattern: /^You can only change your own dashboards$/, id: 'error.editOwnDashboards' },
+  { pattern: /^Making a query (?:or dashboard )?public requires the analytics share right$/, id: 'error.shareRight' },
+  { pattern: /^The default dashboard cannot be deleted$/, id: 'error.defaultDashboard' },
+  { pattern: /^This query is not visible to you$/, id: 'error.queryNotVisible' },
   { pattern: /^Reading grievance tickets requires the grievance read right$/, id: 'error.grievanceRight' },
   {
     pattern: /^Field '(.+)' is not allowed in (\w+) for entity '(\w+)'$/,

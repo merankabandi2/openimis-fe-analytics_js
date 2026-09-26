@@ -10,12 +10,25 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Button,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControlLabel,
+  Switch,
+  Tooltip,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
   Dashboard as DashboardIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Close as CloseIcon,
 } from '@material-ui/icons';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -23,6 +36,7 @@ import 'react-resizable/css/styles.css';
 import { useTranslations, useModulesManager, Helmet } from '@openimis/fe-core';
 import {
   fetchDashboards, fetchDashboard, executeWidget, updateDashboardLayout,
+  createDashboard, updateDashboard, deleteDashboard, deleteWidget,
 } from '../actions';
 import {
   graphqlErrorMessage, hasRight, layoutPositions, localiseError, pageArgs, parseJson, requestErrorMessage,
@@ -30,6 +44,7 @@ import {
 } from '../utils/analytics';
 import {
   GRID_COLS, GRID_ROW_HEIGHT, GRID_MARGIN, GRID_CONTAINER_PADDING, RIGHT_ANALYTICS_CREATE_QUERY, RIGHT_ANALYTICS_VIEW,
+  RIGHT_ANALYTICS_CREATE_DASHBOARD, RIGHT_ANALYTICS_SHARE,
 } from '../constants';
 import MetricWidget from '../components/widgets/MetricWidget';
 import ChartWidget from '../components/widgets/ChartWidget';
@@ -60,6 +75,17 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     gap: theme.spacing(2),
   },
+  dashboardActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  },
+  removeWidget: {
+    position: 'absolute',
+    top: theme.spacing(0.5),
+    right: theme.spacing(0.5),
+    zIndex: 1,
+  },
   emptyState: {
     textAlign: 'center',
     padding: theme.spacing(8),
@@ -72,6 +98,7 @@ const useStyles = makeStyles((theme) => ({
   },
   widgetContainer: {
     height: '100%',
+    position: 'relative',
   },
   error: {
     marginBottom: theme.spacing(2),
@@ -85,6 +112,10 @@ const AnalyticsDashboardPage = ({
   fetchDashboard,
   executeWidget,
   updateDashboardLayout,
+  createDashboard,
+  updateDashboard,
+  deleteDashboard,
+  deleteWidget,
   dashboards,
   currentDashboard,
   fetchingDashboards,
@@ -93,6 +124,7 @@ const AnalyticsDashboardPage = ({
   errorDashboard,
   rights,
   history,
+  location,
 }) => {
   const classes = useStyles();
   const modulesManager = useModulesManager();
@@ -100,7 +132,10 @@ const AnalyticsDashboardPage = ({
   const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
   const allowed = hasRight(rights, RIGHT_ANALYTICS_VIEW);
 
-  const [selectedDashboardId, setSelectedDashboardId] = useState(null);
+  // SavedQueriesPage opens the dashboard it just added a widget to.
+  const [selectedDashboardId, setSelectedDashboardId] = useState(
+    (location && location.state && location.state.dashboardId) || null,
+  );
   const [dashboardMenuAnchor, setDashboardMenuAnchor] = useState(null);
   const [layout, setLayout] = useState([]);
   const [layoutError, setLayoutError] = useState(null);
@@ -108,6 +143,16 @@ const AnalyticsDashboardPage = ({
   const [widgetData, setWidgetData] = useState({});
   const [widgetErrors, setWidgetErrors] = useState({});
   const [loadingWidgets, setLoadingWidgets] = useState({});
+  // { mode: 'create' | 'edit', name, description, isPublic } while the dashboard dialog is open.
+  const [dashboardForm, setDashboardForm] = useState(null);
+  const [dashboardFormError, setDashboardFormError] = useState(null);
+  const [savingDashboard, setSavingDashboard] = useState(false);
+  const [confirmDeleteDashboard, setConfirmDeleteDashboard] = useState(false);
+  const [widgetToRemove, setWidgetToRemove] = useState(null);
+  const [actionError, setActionError] = useState(null);
+
+  const canCreateDashboard = hasRight(rights, RIGHT_ANALYTICS_CREATE_DASHBOARD);
+  const canShare = hasRight(rights, RIGHT_ANALYTICS_SHARE);
 
   // Fetch available dashboards on mount
   useEffect(() => {
@@ -163,6 +208,75 @@ const AnalyticsDashboardPage = ({
   const handleDashboardChange = (dashboardId) => {
     setSelectedDashboardId(dashboardId);
     setDashboardMenuAnchor(null);
+  };
+
+  const actionErrorOf = (action) => graphqlErrorMessage(action && action.payload)
+    || (action && action.error ? requestErrorMessage(action.payload) || 'error' : null);
+
+  const openCreateDashboard = () => {
+    setDashboardFormError(null);
+    setDashboardForm({
+      mode: 'create', name: '', description: '', isPublic: false,
+    });
+  };
+
+  const openEditDashboard = () => {
+    setDashboardFormError(null);
+    setDashboardForm({
+      mode: 'edit',
+      name: currentDashboard.name || '',
+      description: currentDashboard.description || '',
+      isPublic: Boolean(currentDashboard.isPublic),
+    });
+  };
+
+  const handleSaveDashboard = async () => {
+    const input = {
+      name: dashboardForm.name.trim(),
+      description: dashboardForm.description,
+      // Without the share right the public flag keeps its saved value.
+      isPublic: canShare
+        ? dashboardForm.isPublic
+        : Boolean(dashboardForm.mode === 'edit' && currentDashboard.isPublic),
+    };
+    setSavingDashboard(true);
+    const action = dashboardForm.mode === 'edit'
+      ? await updateDashboard(currentDashboard.id, input)
+      : await createDashboard(input);
+    setSavingDashboard(false);
+    const error = actionErrorOf(action);
+    if (error) {
+      setDashboardFormError(error);
+      return;
+    }
+    const saved = action.payload.data[
+      dashboardForm.mode === 'edit' ? 'updateAnalyticsDashboard' : 'createAnalyticsDashboard'
+    ].dashboard;
+    setDashboardForm(null);
+    fetchDashboards(pageArgs({ rowsPerPage: 20 }));
+    if (saved.id === selectedDashboardId) {
+      fetchDashboard(saved.id);
+    } else {
+      setSelectedDashboardId(saved.id);
+    }
+  };
+
+  const handleDeleteDashboard = async () => {
+    const action = await deleteDashboard(currentDashboard.id);
+    setConfirmDeleteDashboard(false);
+    const error = actionErrorOf(action);
+    setActionError(error);
+    if (error) return;
+    setSelectedDashboardId(null);
+    fetchDashboards(pageArgs({ rowsPerPage: 20 }));
+  };
+
+  const handleRemoveWidget = async () => {
+    const action = await deleteWidget(widgetToRemove.id);
+    setWidgetToRemove(null);
+    const error = actionErrorOf(action);
+    setActionError(error);
+    if (!error) fetchDashboard(currentDashboard.id);
   };
 
   // Persist the arrangement once a drag or resize ends (owners with 200004 only).
@@ -281,8 +395,41 @@ const AnalyticsDashboardPage = ({
           >
             <MoreVertIcon />
           </IconButton>
+          {canEdit && (
+            <Chip
+              size="small"
+              variant="outlined"
+              label={formatMessage(currentDashboard.isPublic ? 'dashboard.public' : 'dashboard.private')}
+            />
+          )}
         </Box>
-        
+
+        <Box className={classes.dashboardActions}>
+          {canEdit && (
+            <Tooltip title={formatMessage('dashboard.edit')}>
+              <IconButton size="small" onClick={openEditDashboard} aria-label={formatMessage('dashboard.edit')}>
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+          {canEdit && !currentDashboard.isDefault && (
+            <Tooltip title={formatMessage('dashboard.delete')}>
+              <IconButton
+                size="small"
+                onClick={() => setConfirmDeleteDashboard(true)}
+                aria-label={formatMessage('dashboard.delete')}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+          {canCreateDashboard && (
+            <Button variant="outlined" color="primary" startIcon={<AddIcon />} onClick={openCreateDashboard}>
+              {formatMessage('dashboard.create')}
+            </Button>
+          )}
+        </Box>
+
         <Menu
           anchorEl={dashboardMenuAnchor}
           open={Boolean(dashboardMenuAnchor)}
@@ -300,11 +447,12 @@ const AnalyticsDashboardPage = ({
         </Menu>
       </Box>
 
-      {(errorDashboards || errorDashboard || layoutError) && (
+      {(errorDashboards || errorDashboard || layoutError || actionError) && (
         <Paper className={classes.error} role="alert">
           <Typography variant="body2">
             {localise(errorDashboards || errorDashboard)
-              || formatMessageWithValues('dashboard.layoutError', { error: localise(layoutError) })}
+              || (layoutError && formatMessageWithValues('dashboard.layoutError', { error: localise(layoutError) }))
+              || formatMessageWithValues('dashboard.actionError', { error: localise(actionError) })}
           </Typography>
         </Paper>
       )}
@@ -323,9 +471,20 @@ const AnalyticsDashboardPage = ({
           onResizeStop={handleLayoutCommit}
           isDraggable={canEdit && breakpoint === 'lg'}
           isResizable={canEdit && breakpoint === 'lg'}
+          draggableCancel=".analytics-remove-widget"
         >
           {widgets.map((widget) => (
             <div key={widget.id} className={classes.widgetContainer}>
+              {canEdit && (
+                <IconButton
+                  size="small"
+                  className={`${classes.removeWidget} analytics-remove-widget`}
+                  onClick={() => setWidgetToRemove(widget)}
+                  aria-label={formatMessage('dashboard.removeWidget')}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )}
               {renderWidget(widget)}
             </div>
           ))}
@@ -335,11 +494,98 @@ const AnalyticsDashboardPage = ({
           <Typography variant="h6" gutterBottom>
             {formatMessage('dashboard.noWidgets')}
           </Typography>
-          <Typography variant="body2">
-            {formatMessage('dashboard.addWidgetsHint')}
-          </Typography>
+          {currentDashboard && (
+            <Typography variant="body2">
+              {formatMessage(canEdit ? 'dashboard.addWidgetsHint' : 'dashboard.noWidgetsViewer')}
+            </Typography>
+          )}
         </Box>
       )}
+
+      <Dialog open={Boolean(dashboardForm)} onClose={() => setDashboardForm(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {formatMessage(dashboardForm && dashboardForm.mode === 'edit' ? 'dashboard.editTitle' : 'dashboard.createTitle')}
+        </DialogTitle>
+        {dashboardForm && (
+          <DialogContent>
+            <Box display="flex" flexDirection="column" gap={2} mt={1}>
+              <TextField
+                label={formatMessage('dashboard.name')}
+                value={dashboardForm.name}
+                onChange={(e) => setDashboardForm({ ...dashboardForm, name: e.target.value })}
+                fullWidth
+                required
+                autoFocus
+              />
+              <TextField
+                label={formatMessage('dashboard.description')}
+                value={dashboardForm.description}
+                onChange={(e) => setDashboardForm({ ...dashboardForm, description: e.target.value })}
+                fullWidth
+                multiline
+                rows={2}
+              />
+              {canShare && (
+                <FormControlLabel
+                  control={(
+                    <Switch
+                      checked={dashboardForm.isPublic}
+                      onChange={(e) => setDashboardForm({ ...dashboardForm, isPublic: e.target.checked })}
+                    />
+                  )}
+                  label={formatMessage('dashboard.makePublic')}
+                />
+              )}
+              {dashboardFormError && (
+                <Typography variant="body2" color="error" role="alert">
+                  {formatMessageWithValues('dashboard.saveError', { error: localise(dashboardFormError) })}
+                </Typography>
+              )}
+            </Box>
+          </DialogContent>
+        )}
+        <DialogActions>
+          <Button onClick={() => setDashboardForm(null)}>{formatMessage('common.cancel')}</Button>
+          <Button
+            onClick={handleSaveDashboard}
+            color="primary"
+            variant="contained"
+            disabled={!dashboardForm || !dashboardForm.name.trim() || savingDashboard}
+          >
+            {formatMessage('common.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={confirmDeleteDashboard} onClose={() => setConfirmDeleteDashboard(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{formatMessage('dashboard.deleteTitle')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {formatMessageWithValues('dashboard.deleteConfirm', { name: currentDashboard?.name || '' })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeleteDashboard(false)}>{formatMessage('common.cancel')}</Button>
+          <Button onClick={handleDeleteDashboard} color="primary" variant="contained">
+            {formatMessage('common.delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={Boolean(widgetToRemove)} onClose={() => setWidgetToRemove(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{formatMessage('dashboard.removeWidget')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {formatMessageWithValues('dashboard.removeWidgetConfirm', { title: widgetToRemove?.title || '' })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setWidgetToRemove(null)}>{formatMessage('common.cancel')}</Button>
+          <Button onClick={handleRemoveWidget} color="primary" variant="contained">
+            {formatMessage('common.delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY) && (
         <Fab
@@ -369,6 +615,10 @@ const mapDispatchToProps = {
   fetchDashboard,
   executeWidget,
   updateDashboardLayout,
+  createDashboard,
+  updateDashboard,
+  deleteDashboard,
+  deleteWidget,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(AnalyticsDashboardPage);

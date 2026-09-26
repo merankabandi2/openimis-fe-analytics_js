@@ -72,7 +72,9 @@ const QueryResults = ({ results, entityType }) => {
   if (!Array.isArray(data)) {
     data = [];
   }
-  const { rowCount, executionTime, truncated } = results;
+  const {
+    rowCount, executionTime, truncated, restrictedRowsWithheld,
+  } = results;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -136,6 +138,11 @@ const QueryResults = ({ results, entityType }) => {
         {truncated && (
           <Typography variant="body2" color="error" className={classes.truncated}>
             {formatMessageWithValues('queryResults.truncated', { count: rowCount })}
+          </Typography>
+        )}
+        {restrictedRowsWithheld && (
+          <Typography variant="body2" color="error" className={classes.truncated} role="alert">
+            {formatMessage('queryResults.restrictedRowsWithheld')}
           </Typography>
         )}
       </Box>
