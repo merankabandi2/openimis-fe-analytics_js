@@ -96,8 +96,8 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
     }
   };
 
-  // Every category gets a tick: labels are slanted and shortened instead of
-  // being dropped when they would overlap; the tooltip shows the full label.
+  // Every category gets a tick; long labels are slanted and shortened, and the
+  // tooltip shows the full label.
   const renderBarChart = () => {
     const { valueKey: dataKey, categoryKey } = pickChartKeys(data, config, 'xAxisKey');
 
