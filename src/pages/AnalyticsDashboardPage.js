@@ -25,10 +25,11 @@ import {
   fetchDashboards, fetchDashboard, executeWidget, updateDashboardLayout,
 } from '../actions';
 import {
-  graphqlErrorMessage, hasRight, layoutPositions, pageArgs, parseJson, requestErrorMessage, widgetLayout,
+  graphqlErrorMessage, hasRight, layoutPositions, localiseError, pageArgs, parseJson, requestErrorMessage,
+  widgetLayout,
 } from '../utils/analytics';
 import {
-  GRID_COLS, GRID_ROW_HEIGHT, GRID_MARGIN, GRID_CONTAINER_PADDING, RIGHT_ANALYTICS_CREATE_QUERY,
+  GRID_COLS, GRID_ROW_HEIGHT, GRID_MARGIN, GRID_CONTAINER_PADDING, RIGHT_ANALYTICS_CREATE_QUERY, RIGHT_ANALYTICS_VIEW,
 } from '../constants';
 import MetricWidget from '../components/widgets/MetricWidget';
 import ChartWidget from '../components/widgets/ChartWidget';
@@ -96,6 +97,8 @@ const AnalyticsDashboardPage = ({
   const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
+  const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
+  const allowed = hasRight(rights, RIGHT_ANALYTICS_VIEW);
 
   const [selectedDashboardId, setSelectedDashboardId] = useState(null);
   const [dashboardMenuAnchor, setDashboardMenuAnchor] = useState(null);
@@ -108,8 +111,9 @@ const AnalyticsDashboardPage = ({
 
   // Fetch available dashboards on mount
   useEffect(() => {
+    if (!allowed) return;
     fetchDashboards(pageArgs({ rowsPerPage: 20 }));
-  }, [fetchDashboards]);
+  }, [fetchDashboards, allowed]);
 
   // Set default dashboard
   useEffect(() => {
@@ -188,7 +192,8 @@ const AnalyticsDashboardPage = ({
       data = [];
     }
     const loading = loadingWidgets[widget.id] || false;
-    const error = widgetErrors[widget.id] || null;
+    const rawError = widgetErrors[widget.id] || null;
+    const error = rawError ? formatMessageWithValues('widget.error', { error: localise(rawError) }) : null;
     const config = parseJson(widget.config, {}) || {};
 
     // widget.widgetType comes back as an UPPERCASE Graphene enum ("BAR_CHART"); the
@@ -239,6 +244,17 @@ const AnalyticsDashboardPage = ({
     }
   };
 
+  if (!allowed) {
+    return (
+      <div className={classes.root}>
+        <Helmet title={formatMessage('dashboard.pageTitle')} />
+        <Typography variant="body1" color="error" role="alert">
+          {formatMessage('dashboard.noRight')}
+        </Typography>
+      </div>
+    );
+  }
+
   if (fetchingDashboards || (selectedDashboardId && fetchingDashboard)) {
     return (
       <div className={classes.root}>
@@ -287,8 +303,8 @@ const AnalyticsDashboardPage = ({
       {(errorDashboards || errorDashboard || layoutError) && (
         <Paper className={classes.error} role="alert">
           <Typography variant="body2">
-            {errorDashboards || errorDashboard
-              || formatMessageWithValues('dashboard.layoutError', { error: layoutError })}
+            {localise(errorDashboards || errorDashboard)
+              || formatMessageWithValues('dashboard.layoutError', { error: localise(layoutError) })}
           </Typography>
         </Paper>
       )}

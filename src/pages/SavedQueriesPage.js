@@ -34,10 +34,10 @@ import { fetchQueries, deleteQuery } from '../actions';
 import {
   DEFAULT_PAGE_SIZE,
   ROWS_PER_PAGE_OPTIONS,
-  RIGHT_ANALYTICS_UPDATE_QUERY,
+  RIGHT_ANALYTICS_CREATE_QUERY,
 } from '../constants';
 import {
-  graphqlErrorMessage, hasRight, pageArgs, parseJson, requestErrorMessage,
+  graphqlErrorMessage, hasRight, localiseError, pageArgs, parseJson, requestErrorMessage,
 } from '../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
@@ -91,15 +91,17 @@ const SavedQueriesPage = ({
   const [rowsPerPage, setRowsPerPage] = React.useState(DEFAULT_PAGE_SIZE);
   const [queryToDelete, setQueryToDelete] = React.useState(null);
   const [deleteError, setDeleteError] = React.useState(null);
-  const canUpdate = hasRight(rights, RIGHT_ANALYTICS_UPDATE_QUERY);
+  const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
+  const allowed = hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY);
 
   const loadPage = React.useCallback(() => {
     fetchQueries(pageArgs({ page, rowsPerPage, orderBy: ['-validityFrom'] }));
   }, [fetchQueries, page, rowsPerPage]);
 
   useEffect(() => {
+    if (!allowed) return;
     loadPage();
-  }, [loadPage]);
+  }, [loadPage, allowed]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -173,6 +175,17 @@ const SavedQueriesPage = ({
     history.push('/analytics/query-builder');
   };
 
+  if (!allowed) {
+    return (
+      <div className={classes.root}>
+        <Helmet title={formatMessage('savedQueries.pageTitle')} />
+        <Typography variant="body1" color="error" role="alert">
+          {formatMessage('savedQueries.noRight')}
+        </Typography>
+      </div>
+    );
+  }
+
   return (
     <div className={classes.root}>
       <Helmet title={formatMessage('savedQueries.pageTitle')} />
@@ -185,7 +198,7 @@ const SavedQueriesPage = ({
 
       {errorQueries && (
         <Paper className={classes.error} role="alert">
-          <Typography variant="body2">{errorQueries}</Typography>
+          <Typography variant="body2">{localise(errorQueries)}</Typography>
         </Paper>
       )}
 
@@ -241,7 +254,7 @@ const SavedQueriesPage = ({
                         <RunIcon />
                       </IconButton>
                     </Tooltip>
-                    {canUpdate && (
+                    {query.canEdit && (
                       <Tooltip title={formatMessage('savedQueries.edit')}>
                         <IconButton
                           size="small"
@@ -259,7 +272,7 @@ const SavedQueriesPage = ({
                         <CopyIcon />
                       </IconButton>
                     </Tooltip>
-                    {canUpdate && (
+                    {query.canEdit && (
                       <Tooltip title={formatMessage('savedQueries.delete')}>
                         <IconButton
                           size="small"
@@ -297,7 +310,7 @@ const SavedQueriesPage = ({
           </Typography>
           {deleteError && (
             <Typography variant="body2" color="error" role="alert">
-              {formatMessageWithValues('savedQueries.deleteError', { error: deleteError })}
+              {formatMessageWithValues('savedQueries.deleteError', { error: localise(deleteError) })}
             </Typography>
           )}
         </DialogContent>

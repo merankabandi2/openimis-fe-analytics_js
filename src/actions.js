@@ -42,7 +42,7 @@ export function fetchDashboard(dashboardId) {
 // Queries
 export function fetchQueries(params) {
   const payload = formatPageQueryWithCount('analyticsQueries', params || [], [
-    'id', 'name', 'description', 'entityType', 'queryConfig', 'isPublic', 'validityFrom',
+    'id', 'name', 'description', 'entityType', 'queryConfig', 'isPublic', 'validityFrom', 'canEdit',
     'createdBy { id username }',
   ]);
   return graphql(payload, 'ANALYTICS_QUERIES');
