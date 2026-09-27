@@ -41,6 +41,13 @@ test('a message containing "; " is matched as a whole before being split', () =>
   assert.doesNotMatch(text, /exceeds/);
 });
 
+test('a grouped export over the cap asks for narrower filters, not grouping, in French', () => {
+  const text = t('Export exceeds maximum rows (50000); narrow the filters');
+  assert.doesNotMatch(text, /exceeds|narrow/);
+  assert.equal(text, fr['analytics.error.exportTooLargeGrouped'].replace('{max}', '50000'));
+  assert.doesNotMatch(text, /regroupement/);
+});
+
 test('joined messages are translated one by one and unknown ones are kept as sent', () => {
   assert.equal(
     t('Unauthorized; connection reset'),

@@ -167,6 +167,11 @@ const BACKEND_ERRORS = [
     id: 'error.exportTooLarge',
     values: (m) => ({ max: m[1] }),
   },
+  {
+    pattern: /^Export exceeds maximum rows \((\d+)\); narrow the filters$/,
+    id: 'error.exportTooLargeGrouped',
+    values: (m) => ({ max: m[1] }),
+  },
 ];
 
 function localiseOne(message, formatMessage, formatMessageWithValues) {
