@@ -217,6 +217,55 @@ export function shortLabel(value) {
   return text.length > AXIS_LABEL_MAX ? `${text.slice(0, AXIS_LABEL_MAX)}…` : text;
 }
 
+function groupBy(items, keyOf) {
+  const groups = new Map();
+  items.forEach((item) => {
+    const key = keyOf(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+  return groups;
+}
+
+// Longest prefix shared by all texts that ends on a space, so that every text
+// keeps a non-empty rest.
+function sharedWordPrefix(texts) {
+  let prefix = texts[0];
+  texts.forEach((text) => {
+    while (!text.startsWith(prefix)) prefix = prefix.slice(0, -1);
+  });
+  let cut = prefix.lastIndexOf(' ') + 1;
+  while (cut > 0 && texts.some((text) => text.slice(cut).trim() === '')) {
+    cut = cut < 2 ? 0 : prefix.lastIndexOf(' ', cut - 2) + 1;
+  }
+  return prefix.slice(0, cut);
+}
+
+// Tick formatter for a category axis. Each label is shortened with shortLabel;
+// labels whose short forms collide drop the words they share ("…réguliers"),
+// and any that still collide are numbered, so every category has its own tick.
+export function axisTickFormatter(values) {
+  const texts = [...new Set((values || []).map((value) => String(value)))];
+  const labels = new Map(texts.map((text) => [text, shortLabel(text)]));
+
+  groupBy(texts, (text) => labels.get(text)).forEach((group) => {
+    if (group.length < 2) return;
+    const prefix = sharedWordPrefix(group);
+    if (!prefix) return;
+    group.forEach((text) => labels.set(text, `…${shortLabel(text.slice(prefix.length))}`));
+  });
+
+  groupBy(texts, (text) => labels.get(text)).forEach((group) => {
+    if (group.length < 2) return;
+    [...group].sort().forEach((text, index) => labels.set(text, `${labels.get(text)} (${index + 1})`));
+  });
+
+  return (value) => {
+    const text = String(value);
+    return labels.has(text) ? labels.get(text) : shortLabel(text);
+  };
+}
+
 // Rows whose category is null or empty get `emptyLabel`, so the axis tick and the
 // legend entry are not blank.
 export function withCategoryLabels(rows, categoryKey, emptyLabel) {

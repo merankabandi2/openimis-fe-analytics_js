@@ -32,7 +32,7 @@ test('rows without a category get a visible label instead of an empty tick', () 
 test('the bar chart axis renders every category label', () => {
   const widget = readFileSync(new URL('../src/components/widgets/ChartWidget.js', import.meta.url), 'utf8');
   const barChart = widget.slice(widget.indexOf('const renderBarChart'), widget.indexOf('const renderLineChart'));
-  assert.match(barChart, /<XAxis[\s\S]*?interval=\{0\}[\s\S]*?tickFormatter=\{shortLabel\}/);
+  assert.match(barChart, /<XAxis[\s\S]*?interval=\{0\}[\s\S]*?tickFormatter=\{tickFormatter\}/);
   const pieChart = widget.slice(widget.indexOf('const renderPieChart'));
   assert.match(pieChart, /label=\{display\.labels\}/);
   assert.match(pieChart, /\{display\.legend && <Legend \/>\}/);
