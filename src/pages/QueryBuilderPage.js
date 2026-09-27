@@ -18,6 +18,7 @@ import QueryBuilder from '../components/QueryBuilder';
 import { createQuery, updateQuery } from '../actions';
 import {
   RIGHT_ANALYTICS_CREATE_QUERY,
+  RIGHT_ANALYTICS_EXPORT,
   RIGHT_ANALYTICS_SAVE_QUERY,
   RIGHT_ANALYTICS_SHARE,
   RIGHT_ANALYTICS_UPDATE_QUERY,
@@ -47,6 +48,7 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
   const editingQueryId = incoming.queryId || null;
   const canSave = hasRight(rights, editingQueryId ? RIGHT_ANALYTICS_UPDATE_QUERY : RIGHT_ANALYTICS_SAVE_QUERY);
   const canShare = hasRight(rights, RIGHT_ANALYTICS_SHARE);
+  const canExport = hasRight(rights, RIGHT_ANALYTICS_EXPORT);
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [queryName, setQueryName] = useState(incoming.queryName || '');
@@ -116,6 +118,7 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
         queryConfig={incoming.queryConfig}
         autoRun={Boolean(incoming.autoRun)}
         onSave={canSave ? handleSaveQuery : null}
+        canExport={canExport}
         onExecute={handleExecuteQuery}
       />
 

@@ -79,6 +79,7 @@ const QueryBuilder = ({
   autoRun,
   onSave,
   onExecute,
+  canExport = false,
   fetchEntityFields,
   executeQuery,
   exportData,
@@ -444,7 +445,7 @@ const QueryBuilder = ({
               </Button>
             )}
             <Box flexGrow={1} />
-            {queryResults && (
+            {canExport && queryResults && (
               <>
                 <Tooltip title={formatMessage('queryBuilder.exportExcel')}>
                   <IconButton

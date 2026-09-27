@@ -33,7 +33,6 @@ export const WIDGET_TYPES = {
   PIE_CHART: 'pie_chart',
   TABLE: 'table',
   METRIC: 'metric',
-  MAP: 'map',
 };
 
 // Export Formats

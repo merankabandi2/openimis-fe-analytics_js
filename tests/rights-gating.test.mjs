@@ -34,6 +34,20 @@ const assertPageGuard = (page, right, key) => {
   for (const lang of ['fr', 'en']) assert.ok(translations(lang)[`analytics.${key}`], `${key} missing in ${lang}`);
 };
 
+test('the Excel and CSV export buttons need the export right', () => {
+  const page = source('QueryBuilderPage.js');
+  assert.match(page, /const canExport = hasRight\(rights, RIGHT_ANALYTICS_EXPORT\);/);
+  assert.match(page, /<QueryBuilder[^>]*?\bcanExport=\{canExport\}/);
+  const builder = readFileSync(new URL('../src/components/QueryBuilder.js', import.meta.url), 'utf8');
+  assert.match(builder, /\{canExport && queryResults && \(\s*<>\s*<Tooltip title=\{formatMessage\('queryBuilder\.exportExcel'\)\}>/);
+  const guard = builder.indexOf('{canExport && queryResults && (');
+  const guardEnd = builder.indexOf('</>', guard);
+  const calls = [...builder.matchAll(/handleExport\('/g)].map((m) => m.index);
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every((i) => i > guard && i < guardEnd), 'handleExport is called outside the guarded buttons');
+  assert.match(builder, /\bcanExport = false,/);
+});
+
 test('the dashboard page needs the dashboards right before loading anything', () => {
   assertPageGuard(source('AnalyticsDashboardPage.js'), 'RIGHT_ANALYTICS_VIEW', 'dashboard.noRight');
 });
