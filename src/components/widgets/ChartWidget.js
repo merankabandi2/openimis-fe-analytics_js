@@ -26,7 +26,7 @@ import {
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { CHART_COLORS } from '../../constants';
 import {
-  chartDisplay, pickChartKeys, shortLabel, withCategoryLabels,
+  axisTickFormatter, chartDisplay, pickChartKeys, withCategoryLabels,
 } from '../../utils/analytics';
 
 const useStyles = makeStyles((theme) => ({
@@ -96,14 +96,16 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
     }
   };
 
-  // Every category gets a tick; long labels are slanted and shortened, and the
-  // tooltip shows the full label.
+  // Every category gets its own tick; long labels are slanted and shortened
+  // without two categories sharing a tick text, and the tooltip shows the full label.
   const renderBarChart = () => {
     const { valueKey: dataKey, categoryKey } = pickChartKeys(data, config, 'xAxisKey');
+    const rows = withCategoryLabels(data, categoryKey, emptyCategory);
+    const tickFormatter = axisTickFormatter(rows.map((row) => row[categoryKey]));
 
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={withCategoryLabels(data, categoryKey, emptyCategory)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <BarChart data={rows} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey={categoryKey}
@@ -112,7 +114,7 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
             textAnchor="end"
             height={90}
             tick={{ fontSize: 11 }}
-            tickFormatter={shortLabel}
+            tickFormatter={tickFormatter}
           />
           <YAxis />
           <Tooltip />
