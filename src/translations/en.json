@@ -134,6 +134,7 @@
   "analytics.error.orderByNotGrouped": "The sort field \"{field}\" must be one of the grouping fields.",
   "analytics.error.dateFilterFormat": "The filter on the date \"{field}\" needs a YYYY-MM-DD value, got \"{value}\".",
   "analytics.error.exportTooLarge": "The export exceeds the maximum number of rows ({max}); add filters or grouping.",
+  "analytics.error.exportTooLargeGrouped": "The export exceeds the maximum number of rows ({max}); add or narrow filters.",
   "analytics.dashboard.noWidgetsViewer": "The owner of this dashboard has not added any widget yet.",
   "analytics.dashboard.create": "New dashboard",
   "analytics.dashboard.createTitle": "New dashboard",
