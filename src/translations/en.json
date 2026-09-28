@@ -114,6 +114,7 @@
   "analytics.savedQueries.noRight": "Saved queries need the right to run analytics queries (200002).",
   "analytics.exportHistory.noRight": "The export history needs the right to export analytics data (200003).",
   "analytics.widget.error": "The widget could not be loaded: {error}",
+  "analytics.widget.unknownType": "This widget type cannot be displayed: {type}",
   "analytics.widget.emptyCategory": "(not set)",
   "analytics.error.unauthorized": "You do not have the right to access this analytics data.",
   "analytics.error.editOwnQueries": "Only the author of a query can change it.",
@@ -163,7 +164,7 @@
   "analytics.widgetType.pie_chart": "Pie chart",
   "analytics.widgetType.table": "Table",
   "analytics.widgetType.metric": "Single metric",
-  "analytics.queryResults.restrictedRowsWithheld": "Restricted grievances, some of which may match the filters, are not included: the query reads fields hidden from you on them. Select only visible fields under \"Fields\", or group the results.",
+  "analytics.queryResults.restrictedRowsWithheld": "Restricted grievances, some of which may match the filters, are not included: the query reads fields hidden from you on them. Use only visible fields in \"Fields\", in the \"Filters\" and in \"Group By\".",
   "analytics.error.editOwnDashboards": "Only the author of a dashboard can change it.",
   "analytics.error.defaultDashboard": "The default dashboard cannot be deleted.",
   "analytics.error.queryNotVisible": "This query is not available to you."

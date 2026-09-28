@@ -351,7 +351,7 @@ const AnalyticsDashboardPage = ({
         return (
           <Paper className={classes.widgetContainer}>
             <Box p={2}>
-              <Typography>Unknown widget type: {widget.widgetType}</Typography>
+              <Typography>{formatMessageWithValues('widget.unknownType', { type: widget.widgetType })}</Typography>
             </Box>
           </Paper>
         );

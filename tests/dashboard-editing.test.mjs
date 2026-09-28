@@ -57,6 +57,34 @@ test('a query result says when restricted grievances were withheld', () => {
   );
 });
 
+test('the withheld-rows alert asks for visible fields in every part of the query that reads them', () => {
+  for (const lang of ['fr', 'en']) {
+    const messages = translations(lang);
+    const text = messages['analytics.queryResults.restrictedRowsWithheld'];
+    for (const label of ['fields', 'filters', 'groupBy']) {
+      assert.ok(text.includes(messages[`analytics.queryBuilder.${label}`]), `${lang}: ${label} not named`);
+    }
+  }
+  assert.doesNotMatch(translations('fr')['analytics.queryResults.restrictedRowsWithheld'], /regroupez/i);
+  assert.doesNotMatch(translations('en')['analytics.queryResults.restrictedRowsWithheld'], /group the results/i);
+});
+
+test('a widget of a type the dashboard cannot draw shows a translated message', async () => {
+  const { WIDGET_TYPES } = await import('../src/constants.js');
+  const page = read('pages/AnalyticsDashboardPage.js');
+  for (const type of Object.values(WIDGET_TYPES)) {
+    assert.match(page, new RegExp(`case '${type}':`), `${type} has no renderer`);
+  }
+  assert.doesNotMatch(page, /Unknown widget type/);
+  assert.match(
+    page,
+    /default:[\s\S]*?formatMessageWithValues\('widget\.unknownType', \{ type: widget\.widgetType \}\)/,
+  );
+  for (const lang of ['fr', 'en']) {
+    assert.match(translations(lang)['analytics.widget.unknownType'] || '', /\{type\}/, `${lang}: widget.unknownType`);
+  }
+});
+
 test('every message the new controls use exists in French and English', () => {
   const sources = ['pages/AnalyticsDashboardPage.js', 'pages/SavedQueriesPage.js', 'components/QueryResults.js']
     .map(read).join('\n');
