@@ -22,7 +22,7 @@ const ANALYTICS_RIGHTS = [
 const PAYMENT_CYCLE_RIGHTS = [200001, 200002, 200003, 200004];
 
 test('menu right constants match the numeric rights fe-core passes to menu filters', () => {
-  const userRights = [210001, 210002, 210003, 210006, 210007];
+  const userRights = [803001, 803002, 803003, 803006, 803007];
   for (const right of [
     RIGHT_ANALYTICS_VIEW, RIGHT_ANALYTICS_CREATE_QUERY, RIGHT_ANALYTICS_EXPORT,
     RIGHT_ANALYTICS_SAVE_QUERY, RIGHT_ANALYTICS_UPDATE_QUERY,
@@ -31,8 +31,8 @@ test('menu right constants match the numeric rights fe-core passes to menu filte
   }
 });
 
-test('analytics rights are the backend codes 210001-210007, in order', () => {
-  assert.deepEqual(ANALYTICS_RIGHTS, [210001, 210002, 210003, 210004, 210005, 210006, 210007]);
+test('analytics rights are the backend codes 803001-803007, in order', () => {
+  assert.deepEqual(ANALYTICS_RIGHTS, [803001, 803002, 803003, 803004, 803005, 803006, 803007]);
 });
 
 test('no analytics right is a payment_cycle right', () => {
