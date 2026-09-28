@@ -2,13 +2,13 @@
 export const MODULE_NAME = 'analytics';
 
 // Rights/Permissions. fe-core hands menu filters the user's rights as numbers.
-export const RIGHT_ANALYTICS_VIEW = 200001;
-export const RIGHT_ANALYTICS_CREATE_QUERY = 200002;
-export const RIGHT_ANALYTICS_EXPORT = 200003;
-export const RIGHT_ANALYTICS_CREATE_DASHBOARD = 200004;
-export const RIGHT_ANALYTICS_SHARE = 200005;
-export const RIGHT_ANALYTICS_SAVE_QUERY = 200006;
-export const RIGHT_ANALYTICS_UPDATE_QUERY = 200007;
+export const RIGHT_ANALYTICS_VIEW = 210001;
+export const RIGHT_ANALYTICS_CREATE_QUERY = 210002;
+export const RIGHT_ANALYTICS_EXPORT = 210003;
+export const RIGHT_ANALYTICS_CREATE_DASHBOARD = 210004;
+export const RIGHT_ANALYTICS_SHARE = 210005;
+export const RIGHT_ANALYTICS_SAVE_QUERY = 210006;
+export const RIGHT_ANALYTICS_UPDATE_QUERY = 210007;
 
 // Routes
 export const ANALYTICS_DASHBOARD_ROUTE = 'analytics/dashboard';
