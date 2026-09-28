@@ -60,13 +60,13 @@ Add the module to your `openimis.json`:
 ## Permissions
 
 The module uses the following permissions:
-- `210001` - View analytics dashboards
-- `210002` - Create and run custom queries
-- `210003` - Export data
-- `210004` - Create and save dashboards
-- `210005` - Share dashboards and queries
-- `210006` - Save a query
-- `210007` - Edit or delete one's own saved queries
+- `803001` - View analytics dashboards
+- `803002` - Create and run custom queries
+- `803003` - Export data
+- `803004` - Create and save dashboards
+- `803005` - Share dashboards and queries
+- `803006` - Save a query
+- `803007` - Edit or delete one's own saved queries
 
 ## Usage
 

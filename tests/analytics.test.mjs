@@ -73,6 +73,6 @@ test('widget positions stored as JSON strings drive the grid', () => {
 });
 
 test('hasRight compares rights numerically', () => {
-  assert.ok(hasRight([210006], '210006'));
-  assert.ok(!hasRight([210002], 210006));
+  assert.ok(hasRight([803006], '803006'));
+  assert.ok(!hasRight([803002], 803006));
 });
