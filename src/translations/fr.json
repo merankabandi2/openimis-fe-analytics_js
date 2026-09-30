@@ -135,6 +135,8 @@
   "analytics.error.dateFilterFormat": "Le filtre sur la date « {field} » attend une valeur AAAA-MM-JJ, reçu « {value} ».",
   "analytics.error.exportTooLarge": "L'export dépasse le nombre maximal de lignes ({max}) ; ajoutez des filtres ou un regroupement.",
   "analytics.error.exportTooLargeGrouped": "L'export dépasse le nombre maximal de lignes ({max}) ; ajoutez ou resserrez des filtres.",
+  "analytics.error.jsonTextFilter": "Le filtre « {operator} » n'est pas autorisé sur le champ JSON « {field} » pour l'entité « {entity} ».",
+  "analytics.error.queryTimeout": "La requête a dépassé {seconds} secondes et a été arrêtée ; resserrez les filtres.",
   "analytics.dashboard.noWidgetsViewer": "Le propriétaire de ce tableau de bord n'y a encore ajouté aucun widget.",
   "analytics.dashboard.create": "Nouveau tableau de bord",
   "analytics.dashboard.createTitle": "Nouveau tableau de bord",

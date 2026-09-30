@@ -135,6 +135,8 @@
   "analytics.error.dateFilterFormat": "The filter on the date \"{field}\" needs a YYYY-MM-DD value, got \"{value}\".",
   "analytics.error.exportTooLarge": "The export exceeds the maximum number of rows ({max}); add filters or grouping.",
   "analytics.error.exportTooLargeGrouped": "The export exceeds the maximum number of rows ({max}); add or narrow filters.",
+  "analytics.error.jsonTextFilter": "The filter \"{operator}\" is not allowed on the JSON field \"{field}\" for the entity \"{entity}\".",
+  "analytics.error.queryTimeout": "The query ran longer than {seconds} seconds and was stopped; narrow the filters.",
   "analytics.dashboard.noWidgetsViewer": "The owner of this dashboard has not added any widget yet.",
   "analytics.dashboard.create": "New dashboard",
   "analytics.dashboard.createTitle": "New dashboard",

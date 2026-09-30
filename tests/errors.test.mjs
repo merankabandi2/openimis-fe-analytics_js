@@ -57,6 +57,24 @@ test('joined messages are translated one by one and unknown ones are kept as sen
   assert.equal(t(null), null);
 });
 
+test('a text filter refused on a JSON field names the operator, the field and the entity in French', () => {
+  const text = t("Text filter 'contains' is not allowed on JSON field 'json_ext' for entity 'individual'");
+  assert.equal(
+    text,
+    fr['analytics.error.jsonTextFilter']
+      .replace('{operator}', fr['analytics.filter.operator.contains'])
+      .replace('{field}', 'json_ext')
+      .replace('{entity}', fr['analytics.entity.individual']),
+  );
+  assert.doesNotMatch(text, /not allowed|for entity/);
+});
+
+test('a query stopped by the timeout gives the limit in seconds in French', () => {
+  const text = t('The query ran longer than 30 seconds and was stopped; narrow the filters');
+  assert.equal(text, fr['analytics.error.queryTimeout'].replace('{seconds}', '30'));
+  assert.doesNotMatch(text, /ran longer|narrow/);
+});
+
 test('every known backend message has a French and an English text', () => {
   const en = JSON.parse(readFileSync(new URL('../src/translations/en.json', import.meta.url), 'utf8'));
   const errorKeys = Object.keys(fr).filter((k) => k.startsWith('analytics.error.'));
