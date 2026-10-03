@@ -69,6 +69,32 @@ test('a text filter refused on a JSON field names the operator, the field and th
   assert.doesNotMatch(text, /not allowed|for entity/);
 });
 
+test('a value filter refused on a JSON field names the operator, the field and the entity in French', () => {
+  const text = t("Filter 'exact' is not allowed on JSON field 'json_ext' for entity 'group'");
+  assert.equal(
+    text,
+    fr['analytics.error.jsonTextFilter']
+      .replace('{operator}', fr['analytics.filter.operator.exact'])
+      .replace('{field}', 'json_ext')
+      .replace('{entity}', fr['analytics.entity.group']),
+  );
+  assert.doesNotMatch(text, /not allowed|for entity/);
+});
+
+test('a JSON field refused in a query part names the field, the part and the entity in French', () => {
+  for (const context of ['group_by', 'aggregations', 'order_by']) {
+    const text = t(`JSON field 'json_ext' is not allowed in ${context} for entity 'individual'`);
+    assert.equal(
+      text,
+      fr['analytics.error.jsonFieldClause']
+        .replace('{field}', 'json_ext')
+        .replace('{context}', fr[`analytics.error.context.${context}`])
+        .replace('{entity}', fr['analytics.entity.individual']),
+    );
+    assert.doesNotMatch(text, /not allowed|for entity/);
+  }
+});
+
 test('a query stopped by the timeout gives the limit in seconds in French', () => {
   const text = t('The query ran longer than 30 seconds and was stopped; narrow the filters');
   assert.equal(text, fr['analytics.error.queryTimeout'].replace('{seconds}', '30'));

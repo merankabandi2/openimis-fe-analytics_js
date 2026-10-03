@@ -163,9 +163,14 @@ const BACKEND_ERRORS = [
     values: (m) => ({ field: m[1], value: m[2] }),
   },
   {
-    pattern: /^Text filter '(\w+)' is not allowed on JSON field '(.+)' for entity '(\w+)'$/,
+    pattern: /^(?:Text filter|Filter) '(\w+)' is not allowed on JSON field '(.+)' for entity '(\w+)'$/,
     id: 'error.jsonTextFilter',
     values: (m) => ({ operator: { id: `filter.operator.${m[1]}` }, field: m[2], entity: { id: `entity.${m[3]}` } }),
+  },
+  {
+    pattern: /^JSON field '(.+)' is not allowed in (\w+) for entity '(\w+)'$/,
+    id: 'error.jsonFieldClause',
+    values: (m) => ({ field: m[1], context: { id: `error.context.${m[2]}` }, entity: { id: `entity.${m[3]}` } }),
   },
   {
     pattern: /^The query ran longer than ([\d.]+) seconds and was stopped; narrow the filters$/,
