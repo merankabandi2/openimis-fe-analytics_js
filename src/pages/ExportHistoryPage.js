@@ -16,7 +16,7 @@ import {
   Tooltip,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { GetApp as DownloadIcon } from '@material-ui/icons';
+import { GetApp as DownloadIcon, Refresh as RefreshIcon } from '@material-ui/icons';
 import { useTranslations, useModulesManager, Helmet, decodeId } from '@openimis/fe-core';
 import { fetchExports } from '../actions';
 import { DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS, RIGHT_ANALYTICS_EXPORT } from '../constants';
@@ -64,6 +64,10 @@ const ExportHistoryPage = ({
     fetchExports(pageArgs({ page, rowsPerPage, orderBy: ['-exportedAt'] }));
   }, [fetchExports, page, rowsPerPage, allowed]);
 
+  const handleRefresh = () => {
+    fetchExports(pageArgs({ page, rowsPerPage, orderBy: ['-exportedAt'] }));
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -105,10 +109,15 @@ const ExportHistoryPage = ({
     <div className={classes.root}>
       <Helmet title={formatMessage('exportHistory.pageTitle')} />
       
-      <Box className={classes.header}>
+      <Box className={classes.header} display="flex" alignItems="center">
         <Typography variant="h4">
           {formatMessage('exportHistory.title')}
         </Typography>
+        <Tooltip title={formatMessage('exportHistory.refresh')}>
+          <IconButton onClick={handleRefresh} disabled={fetchingExports}>
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       {errorExports && (

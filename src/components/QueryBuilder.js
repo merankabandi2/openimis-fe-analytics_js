@@ -88,8 +88,7 @@ const QueryBuilder = ({
   queryError,
   executingQuery,
   exporting,
-  exportUrl,
-  exportRowCount,
+  exportQueued,
   exportError,
 }) => {
   const classes = useStyles();
@@ -231,13 +230,6 @@ const QueryBuilder = ({
     const config = currentQueryConfig();
     exportData(entityType, config, format);
   };
-
-  // Download export when URL is available
-  useEffect(() => {
-    if (exportUrl) {
-      window.open(exportUrl, '_blank');
-    }
-  }, [exportUrl]);
 
   return (
     <div className={classes.root}>
@@ -481,10 +473,10 @@ const QueryBuilder = ({
               </Typography>
             </Paper>
           )}
-          {exportUrl && exportRowCount !== null && (
+          {exportQueued && (
             <Paper className={classes.notice}>
               <Typography variant="body2">
-                {formatMessageWithValues('queryBuilder.exportDone', { count: exportRowCount })}
+                {formatMessage('queryBuilder.exportQueued')}
               </Typography>
             </Paper>
           )}
@@ -510,8 +502,7 @@ const mapStateToProps = (state) => ({
   queryError: state.analytics.queryError,
   executingQuery: state.analytics.executingQuery,
   exporting: state.analytics.exporting,
-  exportUrl: state.analytics.exportUrl,
-  exportRowCount: state.analytics.exportRowCount,
+  exportQueued: state.analytics.exportQueued,
   exportError: state.analytics.exportError,
 });
 
