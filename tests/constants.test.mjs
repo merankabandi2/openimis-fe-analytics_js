@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   EXPORT_FORMATS,
+  FILTER_OPERATORS,
   RIGHT_ANALYTICS_VIEW,
   RIGHT_ANALYTICS_CREATE_QUERY,
   RIGHT_ANALYTICS_EXPORT,
@@ -41,4 +43,12 @@ test('no analytics right is a payment_cycle right', () => {
 
 test('pdf is not offered as an export format', () => {
   assert.deepEqual(Object.values(EXPORT_FORMATS).sort(), ['csv', 'excel']);
+});
+
+test('every filter operator has a label in each translation', () => {
+  for (const lang of ['fr', 'en']) {
+    const messages = JSON.parse(readFileSync(new URL(`../src/translations/${lang}.json`, import.meta.url), 'utf8'));
+    const missing = Object.values(FILTER_OPERATORS).filter((op) => !messages[`analytics.filter.operator.${op}`]);
+    assert.deepEqual(missing, [], `${lang}.json lacks labels for ${missing.join(', ')}`);
+  }
 });
