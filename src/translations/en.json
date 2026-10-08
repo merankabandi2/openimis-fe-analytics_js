@@ -92,6 +92,7 @@
   "analytics.exportHistory.download": "Download",
   "analytics.exportHistory.downloadFile": "Download File",
   "analytics.exportHistory.adhocQuery": "Ad-hoc Query",
+  "analytics.exportHistory.refresh": "Refresh",
   "analytics.common.yes": "Yes",
   "analytics.common.no": "No",
   "analytics.common.save": "Save",

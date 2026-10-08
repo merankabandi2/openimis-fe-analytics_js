@@ -36,3 +36,12 @@ test('the queued message names the export history in both languages', () => {
   assert.equal(fr['analytics.queryBuilder.exportDone'], undefined);
   assert.equal(en['analytics.queryBuilder.exportDone'], undefined);
 });
+
+test('the export history reloads its list on demand', () => {
+  const page = source('pages/ExportHistoryPage.js');
+  assert.match(page, /import \{ GetApp as DownloadIcon, Refresh as RefreshIcon \} from '@material-ui\/icons';/);
+  assert.match(page, /const handleRefresh = \(\) => \{\s*fetchExports\(pageArgs\(\{ page, rowsPerPage, orderBy: \['-exportedAt'\] \}\)\);\s*\};/);
+  assert.match(page, /<Tooltip title=\{formatMessage\('exportHistory\.refresh'\)\}>\s*<IconButton onClick=\{handleRefresh\} disabled=\{fetchingExports\}>\s*<RefreshIcon \/>/);
+  assert.equal(translations('fr')['analytics.exportHistory.refresh'], 'Actualiser');
+  assert.equal(translations('en')['analytics.exportHistory.refresh'], 'Refresh');
+});
