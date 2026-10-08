@@ -122,9 +122,7 @@ export function exportData(entityType, queryConfig, exportFormat, queryId = null
         exportFormat: $exportFormat,
         queryId: $queryId
       ) {
-        exportUrl
-        exportId
-        rowCount
+        queued
       }
     }
   `;

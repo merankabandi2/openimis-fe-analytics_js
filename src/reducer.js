@@ -44,9 +44,7 @@ const INITIAL_STATE = {
 
   // Export
   exporting: false,
-  exported: false,
-  exportUrl: null,
-  exportRowCount: null,
+  exportQueued: false,
   exportError: null,
 
   // Export history
@@ -215,9 +213,7 @@ function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         exporting: true,
-        exported: false,
-        exportUrl: null,
-        exportRowCount: null,
+        exportQueued: false,
         exportError: null,
       };
     case 'ANALYTICS_EXPORT_RESP': {
@@ -225,9 +221,7 @@ function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         exporting: false,
-        exported: Boolean(data),
-        exportUrl: data ? data.exportUrl : null,
-        exportRowCount: data ? data.rowCount : null,
+        exportQueued: Boolean(data && data.queued),
         exportError: responseError(action),
       };
     }
@@ -277,9 +271,7 @@ function reducer(state = INITIAL_STATE, action) {
     case 'ANALYTICS_CLEAR_EXPORT':
       return {
         ...state,
-        exported: false,
-        exportUrl: null,
-        exportRowCount: null,
+        exportQueued: false,
         exportError: null,
       };
 

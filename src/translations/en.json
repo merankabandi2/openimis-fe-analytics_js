@@ -101,7 +101,7 @@
   "analytics.queryBuilder.limitHelp": "At most {max} rows",
   "analytics.queryBuilder.queryError": "The query failed: {error}",
   "analytics.queryBuilder.exportError": "The export failed: {error}",
-  "analytics.queryBuilder.exportDone": "{count} rows exported",
+  "analytics.queryBuilder.exportQueued": "The export is being prepared. It will appear in \"Export History\" once ready, and a notification will tell you.",
   "analytics.queryBuilder.saveError": "Saving failed: {error}",
   "analytics.queryBuilder.noRight": "The query builder needs the right to run analytics queries (803002).",
   "analytics.queryResults.truncated": "Result truncated: only the first {count} rows are shown. Add filters or grouping.",
