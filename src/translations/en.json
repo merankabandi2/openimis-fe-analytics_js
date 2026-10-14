@@ -174,5 +174,12 @@
   "analytics.queryResults.restrictedRowsWithheld": "Restricted grievances, some of which may match the filters, are not included: the query reads fields hidden from you on them. Use only visible fields in \"Fields\", in the \"Filters\" and in \"Group By\".",
   "analytics.error.editOwnDashboards": "Only the author of a dashboard can change it.",
   "analytics.error.defaultDashboard": "The default dashboard cannot be deleted.",
-  "analytics.error.queryNotVisible": "This query is not available to you."
+  "analytics.error.queryNotVisible": "This query is not available to you.",
+  "analytics.gql_analytics_dashboards_perms": "Analytics | Dashboards: view dashboards and their widgets",
+  "analytics.gql_analytics_query_perms": "Analytics | Queries: run queries and view saved queries",
+  "analytics.gql_analytics_export_perms": "Analytics | Exports: Excel and CSV files, history and download",
+  "analytics.gql_analytics_dashboard_create_perms": "Analytics | Dashboards: create and manage own dashboards and their widgets",
+  "analytics.gql_analytics_dashboard_share_perms": "Analytics | Sharing: make a query or a dashboard public",
+  "analytics.gql_analytics_query_create_perms": "Analytics | Queries: save a new query",
+  "analytics.gql_analytics_query_update_perms": "Analytics | Queries: edit and delete own queries"
 }
