@@ -174,5 +174,12 @@
   "analytics.queryResults.restrictedRowsWithheld": "Des plaintes à accès restreint, dont certaines peuvent correspondre aux filtres, ne sont pas incluses : la requête lit des champs qui vous sont masqués pour ces plaintes. N'utilisez que des champs visibles dans « Champs », dans les « Filtres » et dans « Regrouper par ».",
   "analytics.error.editOwnDashboards": "Seul l'auteur d'un tableau de bord peut le modifier.",
   "analytics.error.defaultDashboard": "Le tableau de bord par défaut ne peut pas être supprimé.",
-  "analytics.error.queryNotVisible": "Cette requête ne vous est pas accessible."
+  "analytics.error.queryNotVisible": "Cette requête ne vous est pas accessible.",
+  "analytics.gql_analytics_dashboards_perms": "Analytique | Tableaux de bord : consultation des tableaux de bord et de leurs widgets",
+  "analytics.gql_analytics_query_perms": "Analytique | Requêtes : exécution et consultation des requêtes enregistrées",
+  "analytics.gql_analytics_export_perms": "Analytique | Exports : fichiers Excel et CSV, historique et téléchargement",
+  "analytics.gql_analytics_dashboard_create_perms": "Analytique | Tableaux de bord : création et gestion de ses tableaux de bord et de leurs widgets",
+  "analytics.gql_analytics_dashboard_share_perms": "Analytique | Partage : rendre publique une requête ou un tableau de bord",
+  "analytics.gql_analytics_query_create_perms": "Analytique | Requêtes : enregistrement d'une nouvelle requête",
+  "analytics.gql_analytics_query_update_perms": "Analytique | Requêtes : modification et suppression de ses requêtes"
 }
