@@ -4,7 +4,6 @@ import { FormattedMessage } from '@openimis/fe-core';
 import messages_en from './translations/en.json';
 import messages_fr from './translations/fr.json';
 import reducer from './reducer';
-import AnalyticsMainMenu from './menus/AnalyticsMainMenu';
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import QueryBuilderPage from './pages/QueryBuilderPage';
 import SavedQueriesPage from './pages/SavedQueriesPage';
@@ -25,9 +24,6 @@ const DEFAULT_CONFIG = {
     { key: 'fr', messages: messages_fr }
   ],
   reducers: [{ key: 'analytics', reducer }],
-  'core.MainMenu': [
-    { name: 'AnalyticsMainMenu', component: AnalyticsMainMenu },
-  ],
   'core.Router': [
     { path: ANALYTICS_DASHBOARD_ROUTE, component: AnalyticsDashboardPage },
     { path: QUERY_BUILDER_ROUTE, component: QueryBuilderPage },
