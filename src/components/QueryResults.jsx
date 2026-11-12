@@ -13,42 +13,49 @@ import {
   Chip,
   LinearProgress,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { ROWS_PER_PAGE_OPTIONS } from '../constants';
 
-const useStyles = makeStyles((theme) => ({
-  container: {
+const StyledQueryResults = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .QueryResults-container': {
     maxHeight: 600,
   },
-  header: {
+
+  '& .QueryResults-header': {
     padding: theme.spacing(2),
     borderBottom: `1px solid ${theme.palette.divider}`,
   },
-  executionInfo: {
+
+  '& .QueryResults-executionInfo': {
     display: 'flex',
     gap: theme.spacing(2),
     alignItems: 'center',
   },
-  tableCell: {
+
+  '& .QueryResults-tableCell': {
     fontSize: '0.875rem',
   },
-  headerCell: {
+
+  '& .QueryResults-headerCell': {
     fontWeight: 600,
     backgroundColor: theme.palette.grey[100],
   },
-  truncated: {
+
+  '& .QueryResults-truncated': {
     marginTop: theme.spacing(1),
   },
-  noData: {
+
+  '& .QueryResults-noData': {
     padding: theme.spacing(4),
     textAlign: 'center',
     color: theme.palette.text.secondary,
-  },
+  }
 }));
 
 const QueryResults = ({ results, entityType }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues, formatDateFromISO } = useTranslations('analytics', modulesManager);
 
@@ -113,89 +120,91 @@ const QueryResults = ({ results, entityType }) => {
   const paginatedData = data ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : [];
 
   return (
-    <Box>
-      <Box className={classes.header}>
-        <Typography variant="h6" gutterBottom>
-          {formatMessage('queryResults.title')}
-        </Typography>
-        <Box className={classes.executionInfo}>
-          <Chip
-            label={formatMessageWithValues('queryResults.rowCount', { count: rowCount })}
-            color="primary"
-            variant="outlined"
-          />
-          <Chip
-            label={formatMessageWithValues('queryResults.executionTime', {
-              time: executionTime != null ? executionTime.toFixed(2) : '0',
-            })}
-            variant="outlined"
-          />
-          <Chip
-            label={formatMessage(`entity.${(entityType || '').toLowerCase()}`)}
-            variant="outlined"
-          />
+    <StyledQueryResults>
+      <Box>
+        <Box className='QueryResults-header'>
+          <Typography variant="h6" gutterBottom>
+            {formatMessage('queryResults.title')}
+          </Typography>
+          <Box className='QueryResults-executionInfo'>
+            <Chip
+              label={formatMessageWithValues('queryResults.rowCount', { count: rowCount })}
+              color="primary"
+              variant="outlined"
+            />
+            <Chip
+              label={formatMessageWithValues('queryResults.executionTime', {
+                time: executionTime != null ? executionTime.toFixed(2) : '0',
+              })}
+              variant="outlined"
+            />
+            <Chip
+              label={formatMessage(`entity.${(entityType || '').toLowerCase()}`)}
+              variant="outlined"
+            />
+          </Box>
+          {truncated && (
+            <Typography variant="body2" color="error" className='QueryResults-truncated'>
+              {formatMessageWithValues('queryResults.truncated', { count: rowCount })}
+            </Typography>
+          )}
+          {restrictedRowsWithheld && (
+            <Typography variant="body2" color="error" className='QueryResults-truncated' role="alert">
+              {formatMessage('queryResults.restrictedRowsWithheld')}
+            </Typography>
+          )}
         </Box>
-        {truncated && (
-          <Typography variant="body2" color="error" className={classes.truncated}>
-            {formatMessageWithValues('queryResults.truncated', { count: rowCount })}
-          </Typography>
-        )}
-        {restrictedRowsWithheld && (
-          <Typography variant="body2" color="error" className={classes.truncated} role="alert">
-            {formatMessage('queryResults.restrictedRowsWithheld')}
-          </Typography>
-        )}
-      </Box>
 
-      {!data || data.length === 0 ? (
-        <Box className={classes.noData}>
-          <Typography variant="body1">
-            {formatMessage('queryResults.noData')}
-          </Typography>
-        </Box>
-      ) : (
-        <>
-          <TableContainer className={classes.container}>
-            <Table stickyHeader size="small">
-              <TableHead>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column}
-                      className={`${classes.tableCell} ${classes.headerCell}`}
-                    >
-                      {column}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {paginatedData.map((row, index) => (
-                  <TableRow key={index} hover>
+        {!data || data.length === 0 ? (
+          <Box className='QueryResults-noData'>
+            <Typography variant="body1">
+              {formatMessage('queryResults.noData')}
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <TableContainer className='QueryResults-container'>
+              <Table stickyHeader size="small">
+                <TableHead>
+                  <TableRow>
                     {columns.map((column) => (
-                      <TableCell key={column} className={classes.tableCell}>
-                        {formatValue(row[column], column)}
+                      <TableCell
+                        key={column}
+                        className='QueryResults-tableCell QueryResults-headerCell'
+                      >
+                        {column}
                       </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-            component="div"
-            count={rowCount}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage={formatMessage('queryResults.rowsPerPage')}
-            labelDisplayedRows={({ from, to, count }) => formatMessageWithValues('pagination.displayedRows', { from, to, count })}
-          />
-        </>
-      )}
-    </Box>
+                </TableHead>
+                <TableBody>
+                  {paginatedData.map((row, index) => (
+                    <TableRow key={index} hover>
+                      {columns.map((column) => (
+                        <TableCell key={column} className='QueryResults-tableCell'>
+                          {formatValue(row[column], column)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+              component="div"
+              count={rowCount}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage={formatMessage('queryResults.rowsPerPage')}
+              labelDisplayedRows={({ from, to, count }) => formatMessageWithValues('pagination.displayedRows', { from, to, count })}
+            />
+          </>
+        )}
+      </Box>
+    </StyledQueryResults>
   );
 };
 

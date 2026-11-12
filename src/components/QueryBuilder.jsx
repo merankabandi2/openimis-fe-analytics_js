@@ -20,7 +20,7 @@ import {
   CircularProgress,
   Tooltip,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -36,41 +36,51 @@ import FilterRow from './FilterRow';
 import AggregationRow from './AggregationRow';
 import QueryResults from './QueryResults';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+const StyledQueryBuilder = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .QueryBuilder-root': {
     padding: theme.spacing(2),
   },
-  section: {
+
+  '& .QueryBuilder-section': {
     marginBottom: theme.spacing(3),
   },
-  sectionTitle: {
+
+  '& .QueryBuilder-sectionTitle': {
     marginBottom: theme.spacing(2),
   },
-  filterRow: {
+
+  '& .QueryBuilder-filterRow': {
     marginBottom: theme.spacing(1),
   },
-  addButton: {
+
+  '& .QueryBuilder-addButton': {
     marginTop: theme.spacing(1),
   },
-  actionButtons: {
+
+  '& .QueryBuilder-actionButtons': {
     display: 'flex',
     gap: theme.spacing(2),
     marginTop: theme.spacing(3),
   },
-  resultsSection: {
+
+  '& .QueryBuilder-resultsSection': {
     marginTop: theme.spacing(3),
   },
-  error: {
+
+  '& .QueryBuilder-error': {
     marginTop: theme.spacing(2),
     padding: theme.spacing(2),
     color: theme.palette.error.main,
     borderLeft: `4px solid ${theme.palette.error.main}`,
   },
-  notice: {
+
+  '& .QueryBuilder-notice': {
     marginTop: theme.spacing(2),
     padding: theme.spacing(2),
     borderLeft: `4px solid ${theme.palette.primary.main}`,
-  },
+  }
 }));
 
 const QueryBuilder = ({
@@ -91,7 +101,6 @@ const QueryBuilder = ({
   exportQueued,
   exportError,
 }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
   const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
@@ -232,266 +241,268 @@ const QueryBuilder = ({
   };
 
   return (
-    <div className={classes.root}>
-      {/* Entity Type Selection */}
-      <Paper className={classes.section}>
-        <Box p={2}>
-          <Typography variant="h6" className={classes.sectionTitle}>
-            {formatMessage('queryBuilder.selectEntity')}
-          </Typography>
-          <FormControl variant="standard" fullWidth>
-            <InputLabel>{formatMessage('queryBuilder.entityType')}</InputLabel>
-            <Select variant="standard" value={entityType} onChange={handleEntityTypeChange}>
-              {Object.entries(ENTITY_TYPES).map(([key, value]) => (
-                <MenuItem key={value} value={value}>
-                  {formatMessage(`entity.${value}`)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-      </Paper>
-
-      {entityType && (
-        <>
-          {/* Filters */}
-          <Paper className={classes.section}>
-            <Box p={2}>
-              <Typography variant="h6" className={classes.sectionTitle}>
-                {formatMessage('queryBuilder.filters')}
-              </Typography>
-              {filters.map((filter, index) => (
-                <FilterRow
-                  key={index}
-                  filter={filter}
-                  fields={fields}
-                  onChange={(updatedFilter) => handleUpdateFilter(index, updatedFilter)}
-                  onRemove={() => handleRemoveFilter(index)}
-                  className={classes.filterRow}
-                />
-              ))}
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddFilter}
-                className={classes.addButton}
-                color="primary"
-              >
-                {formatMessage('queryBuilder.addFilter')}
-              </Button>
-            </Box>
-          </Paper>
-
-          {/* Field Selection */}
-          <Paper className={classes.section}>
-            <Box p={2}>
-              <Typography variant="h6" className={classes.sectionTitle}>
-                {formatMessage('queryBuilder.selectFields')}
-              </Typography>
-              <FormControl variant="standard" fullWidth>
-                <InputLabel>{formatMessage('queryBuilder.fields')}</InputLabel>
-                <Select
-                  variant="standard"
-                  multiple
-                  value={selectedFields}
-                  onChange={(e) => setSelectedFields(e.target.value)}
-                  renderValue={(selected) => (
-                    <Box display="flex" flexWrap="wrap" gap={0.5}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={value} size="small" />
-                      ))}
-                    </Box>
-                  )}>
-                  {fields.map((field) => (
-                    <MenuItem key={field.name} value={field.name}>
-                      {field.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </Paper>
-
-          {/* Grouping and Aggregation */}
-          <Paper className={classes.section}>
-            <Box p={2}>
-              <Typography variant="h6" className={classes.sectionTitle}>
-                {formatMessage('queryBuilder.groupingAggregation')}
-              </Typography>
-              
-              {/* Group By */}
-              <FormControl variant="standard" fullWidth style={{ marginBottom: 16 }}>
-                <InputLabel>{formatMessage('queryBuilder.groupBy')}</InputLabel>
-                <Select
-                  variant="standard"
-                  multiple
-                  value={groupBy}
-                  onChange={(e) => setGroupBy(e.target.value)}
-                  renderValue={(selected) => (
-                    <Box display="flex" flexWrap="wrap" gap={0.5}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={value} size="small" />
-                      ))}
-                    </Box>
-                  )}>
-                  {fields.map((field) => (
-                    <MenuItem key={field.name} value={field.name}>
-                      {field.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Aggregations */}
-              <Typography variant="subtitle2" gutterBottom>
-                {formatMessage('queryBuilder.aggregations')}
-              </Typography>
-              {aggregations.map((aggregation, index) => (
-                <AggregationRow
-                  key={index}
-                  aggregation={aggregation}
-                  fields={fields.filter(f => f.aggregatable)}
-                  onChange={(updated) => handleUpdateAggregation(index, updated)}
-                  onRemove={() => handleRemoveAggregation(index)}
-                  className={classes.filterRow}
-                />
-              ))}
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddAggregation}
-                className={classes.addButton}
-                size="small"
-              >
-                {formatMessage('queryBuilder.addAggregation')}
-              </Button>
-            </Box>
-          </Paper>
-
-          {/* Query Options */}
-          <Paper className={classes.section}>
-            <Box p={2}>
-              <Typography variant="h6" className={classes.sectionTitle}>
-                {formatMessage('queryBuilder.queryOptions')}
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid
-                  size={{
-                    xs: 12,
-                    md: 6
-                  }}>
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel>{formatMessage('queryBuilder.orderBy')}</InputLabel>
-                    <Select
-                      variant="standard"
-                      multiple
-                      value={orderBy}
-                      onChange={(e) => setOrderBy(e.target.value)}
-                      renderValue={(selected) => (
-                        <Box display="flex" flexWrap="wrap" gap={0.5}>
-                          {selected.map((value) => (
-                            <Chip key={value} label={value} size="small" />
-                          ))}
-                        </Box>
-                      )}>
-                      {orderOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid
-                  size={{
-                    xs: 12,
-                    md: 6
-                  }}>
-                  <TextField
-                    variant="standard"
-                    type="number"
-                    label={formatMessage('queryBuilder.limit')}
-                    value={limit}
-                    onChange={(e) => setLimit(
-                      e.target.value === '' ? '' : Math.min(MAX_QUERY_ROWS, Math.max(1, parseInt(e.target.value, 10) || 1)),
-                    )}
-                    fullWidth
-                    helperText={formatMessageWithValues('queryBuilder.limitHelp', { max: MAX_QUERY_ROWS })}
-                    InputProps={{ inputProps: { min: 1, max: MAX_QUERY_ROWS } }} />
-                </Grid>
-              </Grid>
-            </Box>
-          </Paper>
-
-          {/* Action Buttons */}
-          <Box className={classes.actionButtons}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={executingQuery ? <CircularProgress size={20} /> : <RunIcon />}
-              onClick={handleRunQuery}
-              disabled={executingQuery}
-            >
-              {formatMessage('queryBuilder.runQuery')}
-            </Button>
-            {onSave && (
-              <Button
-                variant="outlined"
-                startIcon={<SaveIcon />}
-                onClick={handleSaveQuery}
-              >
-                {formatMessage('queryBuilder.saveQuery')}
-              </Button>
-            )}
-            <Box flexGrow={1} />
-            {canExport && queryResults && (
-              <>
-                <Tooltip title={formatMessage('queryBuilder.exportExcel')}>
-                  <IconButton onClick={() => handleExport('excel')} disabled={exporting} size="large">
-                    <ExportIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={formatMessage('queryBuilder.exportCSV')}>
-                  <IconButton onClick={() => handleExport('csv')} disabled={exporting} size="large">
-                    <ExportIcon />
-                  </IconButton>
-                </Tooltip>
-              </>
-            )}
+    <StyledQueryBuilder>
+      <div className='QueryBuilder-root'>
+        {/* Entity Type Selection */}
+        <Paper className='QueryBuilder-section'>
+          <Box p={2}>
+            <Typography variant="h6" className='QueryBuilder-sectionTitle'>
+              {formatMessage('queryBuilder.selectEntity')}
+            </Typography>
+            <FormControl variant="standard" fullWidth>
+              <InputLabel>{formatMessage('queryBuilder.entityType')}</InputLabel>
+              <Select variant="standard" value={entityType} onChange={handleEntityTypeChange}>
+                {Object.entries(ENTITY_TYPES).map(([key, value]) => (
+                  <MenuItem key={value} value={value}>
+                    {formatMessage(`entity.${value}`)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
+        </Paper>
 
-          {queryError && (
-            <Paper className={classes.error} role="alert">
-              <Typography variant="body2">
-                {formatMessageWithValues('queryBuilder.queryError', { error: localise(queryError) })}
-              </Typography>
+        {entityType && (
+          <>
+            {/* Filters */}
+            <Paper className='QueryBuilder-section'>
+              <Box p={2}>
+                <Typography variant="h6" className='QueryBuilder-sectionTitle'>
+                  {formatMessage('queryBuilder.filters')}
+                </Typography>
+                {filters.map((filter, index) => (
+                  <FilterRow
+                    key={index}
+                    filter={filter}
+                    fields={fields}
+                    onChange={(updatedFilter) => handleUpdateFilter(index, updatedFilter)}
+                    onRemove={() => handleRemoveFilter(index)}
+                    className='QueryBuilder-filterRow'
+                  />
+                ))}
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={handleAddFilter}
+                  className='QueryBuilder-addButton'
+                  color="primary"
+                >
+                  {formatMessage('queryBuilder.addFilter')}
+                </Button>
+              </Box>
             </Paper>
-          )}
-          {exportError && (
-            <Paper className={classes.error} role="alert">
-              <Typography variant="body2">
-                {formatMessageWithValues('queryBuilder.exportError', { error: localise(exportError) })}
-              </Typography>
-            </Paper>
-          )}
-          {exportQueued && (
-            <Paper className={classes.notice}>
-              <Typography variant="body2">
-                {formatMessage('queryBuilder.exportQueued')}
-              </Typography>
-            </Paper>
-          )}
 
-          {/* Query Results */}
-          {queryResults && (
-            <Paper className={classes.resultsSection}>
-              <QueryResults
-                results={queryResults}
-                entityType={entityType}
-              />
+            {/* Field Selection */}
+            <Paper className='QueryBuilder-section'>
+              <Box p={2}>
+                <Typography variant="h6" className='QueryBuilder-sectionTitle'>
+                  {formatMessage('queryBuilder.selectFields')}
+                </Typography>
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel>{formatMessage('queryBuilder.fields')}</InputLabel>
+                  <Select
+                    variant="standard"
+                    multiple
+                    value={selectedFields}
+                    onChange={(e) => setSelectedFields(e.target.value)}
+                    renderValue={(selected) => (
+                      <Box display="flex" flexWrap="wrap" gap={0.5}>
+                        {selected.map((value) => (
+                          <Chip key={value} label={value} size="small" />
+                        ))}
+                      </Box>
+                    )}>
+                    {fields.map((field) => (
+                      <MenuItem key={field.name} value={field.name}>
+                        {field.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
             </Paper>
-          )}
-        </>
-      )}
-    </div>
+
+            {/* Grouping and Aggregation */}
+            <Paper className='QueryBuilder-section'>
+              <Box p={2}>
+                <Typography variant="h6" className='QueryBuilder-sectionTitle'>
+                  {formatMessage('queryBuilder.groupingAggregation')}
+                </Typography>
+                
+                {/* Group By */}
+                <FormControl variant="standard" fullWidth style={{ marginBottom: 16 }}>
+                  <InputLabel>{formatMessage('queryBuilder.groupBy')}</InputLabel>
+                  <Select
+                    variant="standard"
+                    multiple
+                    value={groupBy}
+                    onChange={(e) => setGroupBy(e.target.value)}
+                    renderValue={(selected) => (
+                      <Box display="flex" flexWrap="wrap" gap={0.5}>
+                        {selected.map((value) => (
+                          <Chip key={value} label={value} size="small" />
+                        ))}
+                      </Box>
+                    )}>
+                    {fields.map((field) => (
+                      <MenuItem key={field.name} value={field.name}>
+                        {field.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Aggregations */}
+                <Typography variant="subtitle2" gutterBottom>
+                  {formatMessage('queryBuilder.aggregations')}
+                </Typography>
+                {aggregations.map((aggregation, index) => (
+                  <AggregationRow
+                    key={index}
+                    aggregation={aggregation}
+                    fields={fields.filter(f => f.aggregatable)}
+                    onChange={(updated) => handleUpdateAggregation(index, updated)}
+                    onRemove={() => handleRemoveAggregation(index)}
+                    className='QueryBuilder-filterRow'
+                  />
+                ))}
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={handleAddAggregation}
+                  className='QueryBuilder-addButton'
+                  size="small"
+                >
+                  {formatMessage('queryBuilder.addAggregation')}
+                </Button>
+              </Box>
+            </Paper>
+
+            {/* Query Options */}
+            <Paper className='QueryBuilder-section'>
+              <Box p={2}>
+                <Typography variant="h6" className='QueryBuilder-sectionTitle'>
+                  {formatMessage('queryBuilder.queryOptions')}
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      md: 6
+                    }}>
+                    <FormControl variant="standard" fullWidth>
+                      <InputLabel>{formatMessage('queryBuilder.orderBy')}</InputLabel>
+                      <Select
+                        variant="standard"
+                        multiple
+                        value={orderBy}
+                        onChange={(e) => setOrderBy(e.target.value)}
+                        renderValue={(selected) => (
+                          <Box display="flex" flexWrap="wrap" gap={0.5}>
+                            {selected.map((value) => (
+                              <Chip key={value} label={value} size="small" />
+                            ))}
+                          </Box>
+                        )}>
+                        {orderOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      md: 6
+                    }}>
+                    <TextField
+                      variant="standard"
+                      type="number"
+                      label={formatMessage('queryBuilder.limit')}
+                      value={limit}
+                      onChange={(e) => setLimit(
+                        e.target.value === '' ? '' : Math.min(MAX_QUERY_ROWS, Math.max(1, parseInt(e.target.value, 10) || 1)),
+                      )}
+                      fullWidth
+                      helperText={formatMessageWithValues('queryBuilder.limitHelp', { max: MAX_QUERY_ROWS })}
+                      InputProps={{ inputProps: { min: 1, max: MAX_QUERY_ROWS } }} />
+                  </Grid>
+                </Grid>
+              </Box>
+            </Paper>
+
+            {/* Action Buttons */}
+            <Box className='QueryBuilder-actionButtons'>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={executingQuery ? <CircularProgress size={20} /> : <RunIcon />}
+                onClick={handleRunQuery}
+                disabled={executingQuery}
+              >
+                {formatMessage('queryBuilder.runQuery')}
+              </Button>
+              {onSave && (
+                <Button
+                  variant="outlined"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSaveQuery}
+                >
+                  {formatMessage('queryBuilder.saveQuery')}
+                </Button>
+              )}
+              <Box flexGrow={1} />
+              {canExport && queryResults && (
+                <>
+                  <Tooltip title={formatMessage('queryBuilder.exportExcel')}>
+                    <IconButton onClick={() => handleExport('excel')} disabled={exporting} size="large">
+                      <ExportIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={formatMessage('queryBuilder.exportCSV')}>
+                    <IconButton onClick={() => handleExport('csv')} disabled={exporting} size="large">
+                      <ExportIcon />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+            </Box>
+
+            {queryError && (
+              <Paper className='QueryBuilder-error' role="alert">
+                <Typography variant="body2">
+                  {formatMessageWithValues('queryBuilder.queryError', { error: localise(queryError) })}
+                </Typography>
+              </Paper>
+            )}
+            {exportError && (
+              <Paper className='QueryBuilder-error' role="alert">
+                <Typography variant="body2">
+                  {formatMessageWithValues('queryBuilder.exportError', { error: localise(exportError) })}
+                </Typography>
+              </Paper>
+            )}
+            {exportQueued && (
+              <Paper className='QueryBuilder-notice'>
+                <Typography variant="body2">
+                  {formatMessage('queryBuilder.exportQueued')}
+                </Typography>
+              </Paper>
+            )}
+
+            {/* Query Results */}
+            {queryResults && (
+              <Paper className='QueryBuilder-resultsSection'>
+                <QueryResults
+                  results={queryResults}
+                  entityType={entityType}
+                />
+              </Paper>
+            )}
+          </>
+        )}
+      </div>
+    </StyledQueryBuilder>
   );
 };
 
