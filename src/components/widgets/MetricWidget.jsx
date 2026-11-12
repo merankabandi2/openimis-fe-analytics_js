@@ -5,15 +5,18 @@ import {
   Typography,
   CircularProgress,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+const StyledMetricWidget = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .MetricWidget-root': {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
   },
-  content: {
+
+  '& .MetricWidget-content': {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
@@ -21,28 +24,30 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'center',
     textAlign: 'center',
   },
-  metric: {
+
+  '& .MetricWidget-metric': {
     fontSize: '3rem',
     fontWeight: 600,
     color: theme.palette.primary.main,
     lineHeight: 1,
   },
-  label: {
+
+  '& .MetricWidget-label': {
     marginTop: theme.spacing(1),
     color: theme.palette.text.secondary,
-  },
+  }
 }));
 
 const MetricWidget = ({ title, data, config = {}, loading, error }) => {
-  const classes = useStyles();
-
   if (loading) {
     return (
-      <Card className={classes.root}>
-        <CardContent className={classes.content}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
+      <StyledMetricWidget>
+        <Card className='MetricWidget-root'>
+          <CardContent className='MetricWidget-content'>
+            <CircularProgress />
+          </CardContent>
+        </Card>
+      </StyledMetricWidget>
     );
   }
 
@@ -71,25 +76,27 @@ const MetricWidget = ({ title, data, config = {}, loading, error }) => {
   }
 
   return (
-    <Card className={classes.root}>
-      <CardContent className={classes.content}>
-        <Typography variant="h6" gutterBottom>
-          {title}
-        </Typography>
-        {error ? (
-          <Typography variant="body2" color="error">{error}</Typography>
-        ) : (
-          <Typography className={classes.metric}>
-            {config.prefix}{formattedValue}{config.suffix}
+    <StyledMetricWidget>
+      <Card className='MetricWidget-root'>
+        <CardContent className='MetricWidget-content'>
+          <Typography variant="h6" gutterBottom>
+            {title}
           </Typography>
-        )}
-        {config.label && (
-          <Typography variant="body2" className={classes.label}>
-            {config.label}
-          </Typography>
-        )}
-      </CardContent>
-    </Card>
+          {error ? (
+            <Typography variant="body2" color="error">{error}</Typography>
+          ) : (
+            <Typography className='MetricWidget-metric'>
+              {config.prefix}{formattedValue}{config.suffix}
+            </Typography>
+          )}
+          {config.label && (
+            <Typography variant="body2" className='MetricWidget-label'>
+              {config.label}
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
+    </StyledMetricWidget>
   );
 };
 

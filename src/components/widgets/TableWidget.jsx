@@ -13,65 +13,75 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+const StyledTableWidget = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .TableWidget-root': {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
   },
-  content: {
+
+  '& .TableWidget-content': {
     flex: 1,
     padding: 0,
   },
-  tableContainer: {
+
+  '& .TableWidget-tableContainer': {
     height: '100%',
   },
-  loading: {
+
+  '& .TableWidget-loading': {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
     padding: theme.spacing(3),
   },
-  headerCell: {
+
+  '& .TableWidget-headerCell': {
     fontWeight: 600,
     backgroundColor: theme.palette.grey[100],
   },
-  noData: {
+
+  '& .TableWidget-noData': {
     padding: theme.spacing(3),
     textAlign: 'center',
     color: theme.palette.text.secondary,
-  },
+  }
 }));
 
 const TableWidget = ({ title, data, config, loading, error }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatDateFromISO } = useTranslations('analytics', modulesManager);
 
   if (loading) {
     return (
-      <Card className={classes.root}>
-        <CardContent className={classes.loading}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
+      <StyledTableWidget>
+        <Card className='TableWidget-root'>
+          <CardContent className='TableWidget-loading'>
+            <CircularProgress />
+          </CardContent>
+        </Card>
+      </StyledTableWidget>
     );
   }
 
   if (error || !data || data.length === 0) {
     return (
-      <Card className={classes.root}>
-        <CardHeader title={title} />
-        <CardContent className={classes.noData}>
-          <Typography variant="body2" color={error ? 'error' : 'inherit'}>
-            {error || formatMessage('widget.noData')}
-          </Typography>
-        </CardContent>
-      </Card>
+      <StyledTableWidget>
+        <Card className='TableWidget-root'>
+          <CardHeader title={title} />
+          <CardContent className='TableWidget-noData'>
+            <Typography variant="body2" color={error ? 'error' : 'inherit'}>
+              {error || formatMessage('widget.noData')}
+            </Typography>
+          </CardContent>
+        </Card>
+      </StyledTableWidget>
     );
   }
 
@@ -100,35 +110,37 @@ const TableWidget = ({ title, data, config, loading, error }) => {
   };
 
   return (
-    <Card className={classes.root}>
-      <CardHeader title={title} />
-      <CardContent className={classes.content}>
-        <TableContainer className={classes.tableContainer}>
-          <Table size="small" stickyHeader>
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell key={column} className={classes.headerCell}>
-                    {config.columnLabels?.[column] || column}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {displayData.map((row, index) => (
-                <TableRow key={index} hover>
+    <StyledTableWidget>
+      <Card className='TableWidget-root'>
+        <CardHeader title={title} />
+        <CardContent className='TableWidget-content'>
+          <TableContainer className='TableWidget-tableContainer'>
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow>
                   {columns.map((column) => (
-                    <TableCell key={column}>
-                      {formatCellValue(row[column], column)}
+                    <TableCell key={column} className='TableWidget-headerCell'>
+                      {config.columnLabels?.[column] || column}
                     </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </CardContent>
-    </Card>
+              </TableHead>
+              <TableBody>
+                {displayData.map((row, index) => (
+                  <TableRow key={index} hover>
+                    {columns.map((column) => (
+                      <TableCell key={column}>
+                        {formatCellValue(row[column], column)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+    </StyledTableWidget>
   );
 };
 

@@ -7,7 +7,7 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import {
   BarChart,
   Bar,
@@ -29,26 +29,29 @@ import {
   axisTickFormatter, chartDisplay, pickChartKeys, withCategoryLabels,
 } from '../../utils/analytics';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+const StyledChartWidget = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .ChartWidget-root': {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
   },
-  content: {
+
+  '& .ChartWidget-content': {
     flex: 1,
     minHeight: 300,
   },
-  loading: {
+
+  '& .ChartWidget-loading': {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-  },
+  }
 }));
 
 const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations('analytics', modulesManager);
   const display = chartDisplay(config, widgetType);
@@ -56,18 +59,20 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
 
   if (loading) {
     return (
-      <Card className={classes.root}>
-        <CardContent className={classes.loading}>
-          <CircularProgress />
-        </CardContent>
-      </Card>
+      <StyledChartWidget>
+        <Card className='ChartWidget-root'>
+          <CardContent className='ChartWidget-loading'>
+            <CircularProgress />
+          </CardContent>
+        </Card>
+      </StyledChartWidget>
     );
   }
 
   const renderChart = () => {
     if (error) {
       return (
-        <Box className={classes.loading}>
+        <Box className='ChartWidget-loading'>
           <Typography variant="body2" color="error">
             {error}
           </Typography>
@@ -76,7 +81,7 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
     }
     if (!data || data.length === 0) {
       return (
-        <Box className={classes.loading}>
+        <Box className='ChartWidget-loading'>
           <Typography variant="body2" color="textSecondary">
             {formatMessage('widget.noData')}
           </Typography>
@@ -181,12 +186,14 @@ const ChartWidget = ({ title, data, config = {}, widgetType, loading, error }) =
   };
 
   return (
-    <Card className={classes.root}>
-      <CardHeader title={title} />
-      <CardContent className={classes.content}>
-        {renderChart()}
-      </CardContent>
-    </Card>
+    <StyledChartWidget>
+      <Card className='ChartWidget-root'>
+        <CardHeader title={title} />
+        <CardContent className='ChartWidget-content'>
+          {renderChart()}
+        </CardContent>
+      </Card>
+    </StyledChartWidget>
   );
 };
 
