@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import dayjs from 'dayjs';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { toLocalDateString } from '../utils/analytics';
 
@@ -32,6 +33,16 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
 
   const handleValueChange = (value) => {
     onChange({ ...filter, value });
+  };
+
+  // The value sent on is the picked calendar day as YYYY-MM-DD; a date still being typed
+  // (invalid) leaves the filter unchanged.
+  const handleDateChange = (date) => {
+    if (date === null) {
+      handleValueChange('');
+    } else if (date.isValid()) {
+      handleValueChange(toLocalDateString(date));
+    }
   };
 
   const getOperatorsForFieldType = (type) => {
@@ -115,10 +126,10 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
         return (
           <DatePicker
             label={formatMessage('filter.value')}
-            value={filter.value || null}
-            onChange={(date) => handleValueChange(toLocalDateString(date))}
+            value={typeof filter.value === 'string' && filter.value ? dayjs(filter.value) : null}
+            onChange={handleDateChange}
             format="YYYY-MM-DD"
-            fullWidth
+            slotProps={{ textField: { variant: 'standard', fullWidth: true } }}
           />
         );
 
