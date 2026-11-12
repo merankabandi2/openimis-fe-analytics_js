@@ -1,0 +1,48 @@
+name: Module tests and build
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ['docs/**', '**.md']
+  pull_request:
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: npm test
+    # Organisation self-hosted runner; jobs run in a container so nothing is
+    # left on the runner host between jobs.
+    runs-on: [self-hosted, linux, x64, mera-ci]
+    # npm test passes a glob to node --test, which Node expands from version 21.
+    container: node:22-bookworm-slim
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+      - name: Run the tests
+        run: npm test
+
+  build:
+    name: vite build
+    runs-on: [self-hosted, linux, x64, mera-ci]
+    # Same Node image as the build stage of Dockerfile.fe in openimis-dist-merankabandi.
+    container: node:20-bookworm-slim
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: Check the bundles were produced
+        run: test -s dist/index.cjs.js && test -s dist/index.es.js

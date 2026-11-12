@@ -20,7 +20,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.jsx'),
+      entry: resolve(__dirname, 'src/index.js'),
       name: 'OpenimisFeAnalytics',
       formats: ['es', 'cjs'],
       fileName: (format) => `index.${format === 'es' ? 'es' : 'cjs'}.js`,

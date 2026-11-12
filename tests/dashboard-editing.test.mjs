@@ -8,13 +8,13 @@ const read = (path) => readFileSync(new URL(`../src/${path}`, import.meta.url), 
 const translations = (lang) => JSON.parse(read(`translations/${lang}.json`));
 
 test('the dashboard create right shows the "new dashboard" button', () => {
-  const page = read('pages/AnalyticsDashboardPage.js');
+  const page = read('pages/AnalyticsDashboardPage.jsx');
   assert.match(page, /const canCreateDashboard = hasRight\(rights, RIGHT_ANALYTICS_CREATE_DASHBOARD\);/);
   assert.match(page, /\{canCreateDashboard && \(\s*<Button[^\n]*onClick=\{openCreateDashboard\}>/);
 });
 
 test('edit, delete and widget removal are offered only on a dashboard the user may edit', () => {
-  const page = read('pages/AnalyticsDashboardPage.js');
+  const page = read('pages/AnalyticsDashboardPage.jsx');
   assert.match(page, /\{canEdit && \(\s*<Tooltip title=\{formatMessage\('dashboard\.edit'\)\}>/);
   assert.match(page, /\{canEdit && !currentDashboard\.isDefault && \(\s*<Tooltip title=\{formatMessage\('dashboard\.delete'\)\}>/);
   assert.match(page, /\{canEdit && \(\s*<IconButton[\s\S]*?setWidgetToRemove\(widget\)/);
@@ -22,14 +22,14 @@ test('edit, delete and widget removal are offered only on a dashboard the user m
 });
 
 test('the public switch of the dashboard dialog needs the share right', () => {
-  const page = read('pages/AnalyticsDashboardPage.js');
+  const page = read('pages/AnalyticsDashboardPage.jsx');
   assert.match(page, /const canShare = hasRight\(rights, RIGHT_ANALYTICS_SHARE\);/);
   assert.match(page, /\{canShare && \(\s*<FormControlLabel[\s\S]*?dashboard\.makePublic/);
   assert.match(page, /isPublic: canShare\s*\? dashboardForm\.isPublic/);
 });
 
 test('saved queries offer "add to a dashboard" with the dashboard right, to editable dashboards only', () => {
-  const page = read('pages/SavedQueriesPage.js');
+  const page = read('pages/SavedQueriesPage.jsx');
   assert.match(page, /const canAddToDashboard = hasRight\(rights, RIGHT_ANALYTICS_CREATE_DASHBOARD\);/);
   assert.match(page, /\{canAddToDashboard && \(\s*<Tooltip title=\{formatMessage\('savedQueries\.addToDashboard'\)\}>/);
   assert.match(page, /const editableDashboards = \(dashboards \|\| \[\]\)\.filter\(\(d\) => d\.canEdit\);/);
@@ -52,7 +52,7 @@ test('the actions call the backend dashboard and widget mutations', () => {
 test('a query result says when restricted grievances were withheld', () => {
   assert.match(read('actions.js'), /executeAnalyticsQuery\([^)]*\) \{\s*data\s*rowCount\s*truncated\s*restrictedRowsWithheld/);
   assert.match(
-    read('components/QueryResults.js'),
+    read('components/QueryResults.jsx'),
     /\{restrictedRowsWithheld && \(\s*<Typography[^>]*role="alert">\s*\{formatMessage\('queryResults\.restrictedRowsWithheld'\)\}/,
   );
 });
@@ -71,7 +71,7 @@ test('the withheld-rows alert asks for visible fields in every part of the query
 
 test('a widget of a type the dashboard cannot draw shows a translated message', async () => {
   const { WIDGET_TYPES } = await import('../src/constants.js');
-  const page = read('pages/AnalyticsDashboardPage.js');
+  const page = read('pages/AnalyticsDashboardPage.jsx');
   for (const type of Object.values(WIDGET_TYPES)) {
     assert.match(page, new RegExp(`case '${type}':`), `${type} has no renderer`);
   }
@@ -86,7 +86,7 @@ test('a widget of a type the dashboard cannot draw shows a translated message', 
 });
 
 test('every message the new controls use exists in French and English', () => {
-  const sources = ['pages/AnalyticsDashboardPage.js', 'pages/SavedQueriesPage.js', 'components/QueryResults.js']
+  const sources = ['pages/AnalyticsDashboardPage.jsx', 'pages/SavedQueriesPage.jsx', 'components/QueryResults.jsx']
     .map(read).join('\n');
   const keys = new Set(
     [...sources.matchAll(/'((?:dashboard|savedQueries|queryResults|common|pagination)\.[a-zA-Z]+)'/g)].map((m) => m[1]),

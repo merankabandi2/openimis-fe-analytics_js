@@ -7,16 +7,16 @@ import { readFileSync } from 'node:fs';
 const source = (path) => readFileSync(new URL(`../src/pages/${path}`, import.meta.url), 'utf8');
 
 test('the dashboard "+" shortcut to the query builder needs the query right', () => {
-  const page = source('AnalyticsDashboardPage.js');
+  const page = source('AnalyticsDashboardPage.jsx');
   assert.match(page, /hasRight\(rights, RIGHT_ANALYTICS_CREATE_QUERY\) && \(\s*<Fab/);
   assert.match(page, /rights: state\.core\?\.user\?\.i_user\?\.rights/);
 });
 
 test('the query builder page renders nothing but a message without the query right', () => {
-  const page = source('QueryBuilderPage.js');
+  const page = source('QueryBuilderPage.jsx');
   assert.match(
     page,
-    /if \(!hasRight\(rights, RIGHT_ANALYTICS_CREATE_QUERY\)\) \{[\s\S]*?queryBuilder\.noRight[\s\S]*?\n {2}\}\n\n {2}return \(\n\s*<div className=\{classes\.page\}>[\s\S]*?<QueryBuilder/,
+    /if \(!hasRight\(rights, RIGHT_ANALYTICS_CREATE_QUERY\)\) \{[\s\S]*?queryBuilder\.noRight[\s\S]*?\n {2}\}\n\n {2}return \(\n\s*<StyledQueryBuilderPage>\s*<div className='QueryBuilderPage-page'>[\s\S]*?<QueryBuilder/,
   );
 });
 
@@ -35,10 +35,10 @@ const assertPageGuard = (page, right, key) => {
 };
 
 test('the Excel and CSV export buttons need the export right', () => {
-  const page = source('QueryBuilderPage.js');
+  const page = source('QueryBuilderPage.jsx');
   assert.match(page, /const canExport = hasRight\(rights, RIGHT_ANALYTICS_EXPORT\);/);
   assert.match(page, /<QueryBuilder[^>]*?\bcanExport=\{canExport\}/);
-  const builder = readFileSync(new URL('../src/components/QueryBuilder.js', import.meta.url), 'utf8');
+  const builder = readFileSync(new URL('../src/components/QueryBuilder.jsx', import.meta.url), 'utf8');
   assert.match(builder, /\{canExport && queryResults && \(\s*<>\s*<Tooltip title=\{formatMessage\('queryBuilder\.exportExcel'\)\}>/);
   const guard = builder.indexOf('{canExport && queryResults && (');
   const guardEnd = builder.indexOf('</>', guard);
@@ -49,25 +49,25 @@ test('the Excel and CSV export buttons need the export right', () => {
 });
 
 test('the dashboard page needs the dashboards right before loading anything', () => {
-  assertPageGuard(source('AnalyticsDashboardPage.js'), 'RIGHT_ANALYTICS_VIEW', 'dashboard.noRight');
+  assertPageGuard(source('AnalyticsDashboardPage.jsx'), 'RIGHT_ANALYTICS_VIEW', 'dashboard.noRight');
 });
 
 test('the saved-queries page needs the query right before loading anything', () => {
-  assertPageGuard(source('SavedQueriesPage.js'), 'RIGHT_ANALYTICS_CREATE_QUERY', 'savedQueries.noRight');
+  assertPageGuard(source('SavedQueriesPage.jsx'), 'RIGHT_ANALYTICS_CREATE_QUERY', 'savedQueries.noRight');
 });
 
 test('the export history page needs the export right before loading anything', () => {
-  assertPageGuard(source('ExportHistoryPage.js'), 'RIGHT_ANALYTICS_EXPORT', 'exportHistory.noRight');
+  assertPageGuard(source('ExportHistoryPage.jsx'), 'RIGHT_ANALYTICS_EXPORT', 'exportHistory.noRight');
 });
 
 test('the saved-queries "+" is rendered only past the query-right guard', () => {
-  const page = source('SavedQueriesPage.js');
+  const page = source('SavedQueriesPage.jsx');
   const guard = page.indexOf('if (!allowed) {');
   assert.ok(guard >= 0 && guard < page.indexOf('<Fab'));
 });
 
 test('edit and delete are offered only on saved queries the server says the user may change', () => {
-  const page = source('SavedQueriesPage.js');
+  const page = source('SavedQueriesPage.jsx');
   assert.match(page, /\{query\.canEdit && \(\s*<Tooltip title=\{formatMessage\('savedQueries\.edit'\)\}>/);
   assert.match(page, /\{query\.canEdit && \(\s*<Tooltip title=\{formatMessage\('savedQueries\.delete'\)\}>/);
   assert.doesNotMatch(page, /canUpdate/);
@@ -76,19 +76,19 @@ test('edit and delete are offered only on saved queries the server says the user
 });
 
 test('widget errors are shown inside the translated widget error text', () => {
-  const page = source('AnalyticsDashboardPage.js');
+  const page = source('AnalyticsDashboardPage.jsx');
   assert.match(page, /formatMessageWithValues\('widget\.error', \{ error: localise\(rawError\) \}\)/);
   for (const lang of ['fr', 'en']) assert.ok(translations(lang)['analytics.widget.error']);
 });
 
 test('every page that shows a server message passes it through localiseError', () => {
   for (const [file, count] of [
-    ['AnalyticsDashboardPage.js', 1], ['SavedQueriesPage.js', 1], ['ExportHistoryPage.js', 1], ['QueryBuilderPage.js', 1],
+    ['AnalyticsDashboardPage.jsx', 1], ['SavedQueriesPage.jsx', 1], ['ExportHistoryPage.jsx', 1], ['QueryBuilderPage.jsx', 1],
   ]) {
     const page = source(file);
     assert.ok((page.match(/localiseError\(/g) || []).length >= count, `${file} does not localise errors`);
   }
-  const builder = readFileSync(new URL('../src/components/QueryBuilder.js', import.meta.url), 'utf8');
+  const builder = readFileSync(new URL('../src/components/QueryBuilder.jsx', import.meta.url), 'utf8');
   assert.match(builder, /\{ error: localise\(queryError\) \}/);
   assert.match(builder, /\{ error: localise\(exportError\) \}/);
 });

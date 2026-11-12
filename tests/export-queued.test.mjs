@@ -22,9 +22,9 @@ test('the reducer keeps the queued flag of the export response', () => {
 });
 
 test('the query builder opens no file and says the export is queued', () => {
-  const builder = source('components/QueryBuilder.js');
+  const builder = source('components/QueryBuilder.jsx');
   assert.doesNotMatch(builder, /window\.open/);
-  assert.match(builder, /\{exportQueued && \(\s*<Paper className=\{classes\.notice\}>[\s\S]*?formatMessage\('queryBuilder\.exportQueued'\)/);
+  assert.match(builder, /\{exportQueued && \(\s*<Paper className='QueryBuilder-notice'>[\s\S]*?formatMessage\('queryBuilder\.exportQueued'\)/);
   assert.match(builder, /exportQueued: state\.analytics\.exportQueued/);
 });
 
@@ -38,10 +38,10 @@ test('the queued message names the export history in both languages', () => {
 });
 
 test('the export history reloads its list on demand', () => {
-  const page = source('pages/ExportHistoryPage.js');
-  assert.match(page, /import \{ GetApp as DownloadIcon, Refresh as RefreshIcon \} from '@material-ui\/icons';/);
+  const page = source('pages/ExportHistoryPage.jsx');
+  assert.match(page, /import \{ GetApp as DownloadIcon, Refresh as RefreshIcon \} from '@mui\/icons-material';/);
   assert.match(page, /const handleRefresh = \(\) => \{\s*fetchExports\(pageArgs\(\{ page, rowsPerPage, orderBy: \['-exportedAt'\] \}\)\);\s*\};/);
-  assert.match(page, /<Tooltip title=\{formatMessage\('exportHistory\.refresh'\)\}>\s*<IconButton onClick=\{handleRefresh\} disabled=\{fetchingExports\}>\s*<RefreshIcon \/>/);
+  assert.match(page, /<Tooltip title=\{formatMessage\('exportHistory\.refresh'\)\}>\s*<IconButton onClick=\{handleRefresh\} disabled=\{fetchingExports\} size="large">\s*<RefreshIcon \/>/);
   assert.equal(translations('fr')['analytics.exportHistory.refresh'], 'Actualiser');
   assert.equal(translations('en')['analytics.exportHistory.refresh'], 'Refresh');
 });

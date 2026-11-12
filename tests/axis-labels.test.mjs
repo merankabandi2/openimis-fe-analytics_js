@@ -63,7 +63,7 @@ test('numbers and unknown values are formatted like any category', () => {
 });
 
 test('the bar chart axis formats ticks from the whole category set', () => {
-  const widget = readFileSync(new URL('../src/components/widgets/ChartWidget.js', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../src/components/widgets/ChartWidget.jsx', import.meta.url), 'utf8');
   const barChart = widget.slice(widget.indexOf('const renderBarChart'), widget.indexOf('const renderLineChart'));
   assert.match(barChart, /axisTickFormatter\(rows\.map\(\(row\) => row\[categoryKey\]\)\)/);
   assert.match(barChart, /<XAxis[\s\S]*?interval=\{0\}[\s\S]*?tickFormatter=\{tickFormatter\}/);
