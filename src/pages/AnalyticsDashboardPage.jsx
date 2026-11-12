@@ -21,7 +21,7 @@ import {
   Switch,
   Tooltip,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
@@ -52,59 +52,70 @@ import TableWidget from '../components/widgets/TableWidget';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+const StyledAnalyticsDashboardPage = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .AnalyticsDashboardPage-root': {
     padding: theme.spacing(3),
     height: '100vh',
     overflow: 'auto',
   },
-  header: {
+
+  '& .AnalyticsDashboardPage-header': {
     marginBottom: theme.spacing(3),
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  loading: {
+
+  '& .AnalyticsDashboardPage-loading': {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     height: '50vh',
   },
-  dashboardSelector: {
+
+  '& .AnalyticsDashboardPage-dashboardSelector': {
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(2),
   },
-  dashboardActions: {
+
+  '& .AnalyticsDashboardPage-dashboardActions': {
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1),
   },
-  removeWidget: {
+
+  '& .AnalyticsDashboardPage-removeWidget': {
     position: 'absolute',
     top: theme.spacing(0.5),
     right: theme.spacing(0.5),
     zIndex: 1,
   },
-  emptyState: {
+
+  '& .AnalyticsDashboardPage-emptyState': {
     textAlign: 'center',
     padding: theme.spacing(8),
     color: theme.palette.text.secondary,
   },
-  fab: {
+
+  '& .AnalyticsDashboardPage-fab': {
     position: 'fixed',
     bottom: theme.spacing(2),
     right: theme.spacing(2),
   },
-  widgetContainer: {
+
+  '& .AnalyticsDashboardPage-widgetContainer': {
     height: '100%',
     position: 'relative',
   },
-  error: {
+
+  '& .AnalyticsDashboardPage-error': {
     marginBottom: theme.spacing(2),
     padding: theme.spacing(2),
     color: theme.palette.error.main,
-  },
+  }
 }));
 
 const AnalyticsDashboardPage = ({
@@ -126,7 +137,6 @@ const AnalyticsDashboardPage = ({
   history,
   location,
 }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
   const localise = (message) => localiseError(message, formatMessage, formatMessageWithValues);
@@ -349,7 +359,7 @@ const AnalyticsDashboardPage = ({
         );
       default:
         return (
-          <Paper className={classes.widgetContainer}>
+          <Paper className='AnalyticsDashboardPage-widgetContainer'>
             <Box p={2}>
               <Typography>{formatMessageWithValues('widget.unknownType', { type: widget.widgetType })}</Typography>
             </Box>
@@ -360,243 +370,249 @@ const AnalyticsDashboardPage = ({
 
   if (!allowed) {
     return (
-      <div className={classes.root}>
-        <Helmet title={formatMessage('dashboard.pageTitle')} />
-        <Typography variant="body1" color="error" role="alert">
-          {formatMessage('dashboard.noRight')}
-        </Typography>
-      </div>
+      <StyledAnalyticsDashboardPage>
+        <div className='AnalyticsDashboardPage-root'>
+          <Helmet title={formatMessage('dashboard.pageTitle')} />
+          <Typography variant="body1" color="error" role="alert">
+            {formatMessage('dashboard.noRight')}
+          </Typography>
+        </div>
+      </StyledAnalyticsDashboardPage>
     );
   }
 
   if (fetchingDashboards || (selectedDashboardId && fetchingDashboard)) {
     return (
-      <div className={classes.root}>
-        <Box className={classes.loading}>
-          <CircularProgress />
-        </Box>
-      </div>
+      <StyledAnalyticsDashboardPage>
+        <div className='AnalyticsDashboardPage-root'>
+          <Box className='AnalyticsDashboardPage-loading'>
+            <CircularProgress />
+          </Box>
+        </div>
+      </StyledAnalyticsDashboardPage>
     );
   }
 
   return (
-    <div className={classes.root}>
-      <Helmet title={formatMessage('dashboard.pageTitle')} />
+    <StyledAnalyticsDashboardPage>
+      <div className='AnalyticsDashboardPage-root'>
+        <Helmet title={formatMessage('dashboard.pageTitle')} />
 
-      <Box className={classes.header}>
-        <Box className={classes.dashboardSelector}>
-          <DashboardIcon />
-          <Typography variant="h5">
-            {currentDashboard?.name || formatMessage('dashboard.title')}
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={(e) => setDashboardMenuAnchor(e.currentTarget)}
-          >
-            <MoreVertIcon />
-          </IconButton>
-          {canEdit && (
-            <Chip
+        <Box className='AnalyticsDashboardPage-header'>
+          <Box className='AnalyticsDashboardPage-dashboardSelector'>
+            <DashboardIcon />
+            <Typography variant="h5">
+              {currentDashboard?.name || formatMessage('dashboard.title')}
+            </Typography>
+            <IconButton
               size="small"
-              variant="outlined"
-              label={formatMessage(currentDashboard.isPublic ? 'dashboard.public' : 'dashboard.private')}
-            />
-          )}
-        </Box>
-
-        <Box className={classes.dashboardActions}>
-          {canEdit && (
-            <Tooltip title={formatMessage('dashboard.edit')}>
-              <IconButton size="small" onClick={openEditDashboard} aria-label={formatMessage('dashboard.edit')}>
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-          {canEdit && !currentDashboard.isDefault && (
-            <Tooltip title={formatMessage('dashboard.delete')}>
-              <IconButton
-                size="small"
-                onClick={() => setConfirmDeleteDashboard(true)}
-                aria-label={formatMessage('dashboard.delete')}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-          {canCreateDashboard && (
-            <Button variant="outlined" color="primary" startIcon={<AddIcon />} onClick={openCreateDashboard}>
-              {formatMessage('dashboard.create')}
-            </Button>
-          )}
-        </Box>
-
-        <Menu
-          anchorEl={dashboardMenuAnchor}
-          open={Boolean(dashboardMenuAnchor)}
-          onClose={() => setDashboardMenuAnchor(null)}
-        >
-          {dashboards.map((dashboard) => (
-            <MenuItem
-              key={dashboard.id}
-              onClick={() => handleDashboardChange(dashboard.id)}
-              selected={dashboard.id === selectedDashboardId}
+              onClick={(e) => setDashboardMenuAnchor(e.currentTarget)}
             >
-              {dashboard.name}
-            </MenuItem>
-          ))}
-        </Menu>
-      </Box>
+              <MoreVertIcon />
+            </IconButton>
+            {canEdit && (
+              <Chip
+                size="small"
+                variant="outlined"
+                label={formatMessage(currentDashboard.isPublic ? 'dashboard.public' : 'dashboard.private')}
+              />
+            )}
+          </Box>
 
-      {(errorDashboards || errorDashboard || layoutError || actionError) && (
-        <Paper className={classes.error} role="alert">
-          <Typography variant="body2">
-            {localise(errorDashboards || errorDashboard)
-              || (layoutError && formatMessageWithValues('dashboard.layoutError', { error: localise(layoutError) }))
-              || formatMessageWithValues('dashboard.actionError', { error: localise(actionError) })}
-          </Typography>
-        </Paper>
-      )}
-
-      {widgets.length > 0 ? (
-        <ResponsiveGridLayout
-          className="layout"
-          layouts={{ lg: layout }}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          cols={{ lg: GRID_COLS, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          rowHeight={GRID_ROW_HEIGHT}
-          margin={GRID_MARGIN}
-          containerPadding={GRID_CONTAINER_PADDING}
-          onBreakpointChange={setBreakpoint}
-          onDragStop={handleLayoutCommit}
-          onResizeStop={handleLayoutCommit}
-          isDraggable={canEdit && breakpoint === 'lg'}
-          isResizable={canEdit && breakpoint === 'lg'}
-          draggableCancel=".analytics-remove-widget"
-        >
-          {widgets.map((widget) => (
-            <div key={widget.id} className={classes.widgetContainer}>
-              {canEdit && (
+          <Box className='AnalyticsDashboardPage-dashboardActions'>
+            {canEdit && (
+              <Tooltip title={formatMessage('dashboard.edit')}>
+                <IconButton size="small" onClick={openEditDashboard} aria-label={formatMessage('dashboard.edit')}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            {canEdit && !currentDashboard.isDefault && (
+              <Tooltip title={formatMessage('dashboard.delete')}>
                 <IconButton
                   size="small"
-                  className={`${classes.removeWidget} analytics-remove-widget`}
-                  onClick={() => setWidgetToRemove(widget)}
-                  aria-label={formatMessage('dashboard.removeWidget')}
+                  onClick={() => setConfirmDeleteDashboard(true)}
+                  aria-label={formatMessage('dashboard.delete')}
                 >
-                  <CloseIcon fontSize="small" />
+                  <DeleteIcon />
                 </IconButton>
-              )}
-              {renderWidget(widget)}
-            </div>
-          ))}
-        </ResponsiveGridLayout>
-      ) : (
-        <Box className={classes.emptyState}>
-          <Typography variant="h6" gutterBottom>
-            {formatMessage('dashboard.noWidgets')}
-          </Typography>
-          {currentDashboard && (
-            <Typography variant="body2">
-              {formatMessage(canEdit ? 'dashboard.addWidgetsHint' : 'dashboard.noWidgetsViewer')}
-            </Typography>
-          )}
-        </Box>
-      )}
+              </Tooltip>
+            )}
+            {canCreateDashboard && (
+              <Button variant="outlined" color="primary" startIcon={<AddIcon />} onClick={openCreateDashboard}>
+                {formatMessage('dashboard.create')}
+              </Button>
+            )}
+          </Box>
 
-      <Dialog open={Boolean(dashboardForm)} onClose={() => setDashboardForm(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {formatMessage(dashboardForm && dashboardForm.mode === 'edit' ? 'dashboard.editTitle' : 'dashboard.createTitle')}
-        </DialogTitle>
-        {dashboardForm && (
-          <DialogContent>
-            <Box display="flex" flexDirection="column" gap={2} mt={1}>
-              <TextField
-                variant="standard"
-                label={formatMessage('dashboard.name')}
-                value={dashboardForm.name}
-                onChange={(e) => setDashboardForm({ ...dashboardForm, name: e.target.value })}
-                fullWidth
-                required
-                autoFocus />
-              <TextField
-                variant="standard"
-                label={formatMessage('dashboard.description')}
-                value={dashboardForm.description}
-                onChange={(e) => setDashboardForm({ ...dashboardForm, description: e.target.value })}
-                fullWidth
-                multiline
-                rows={2} />
-              {canShare && (
-                <FormControlLabel
-                  control={(
-                    <Switch
-                      checked={dashboardForm.isPublic}
-                      onChange={(e) => setDashboardForm({ ...dashboardForm, isPublic: e.target.checked })}
-                    />
-                  )}
-                  label={formatMessage('dashboard.makePublic')}
-                />
-              )}
-              {dashboardFormError && (
-                <Typography variant="body2" color="error" role="alert">
-                  {formatMessageWithValues('dashboard.saveError', { error: localise(dashboardFormError) })}
-                </Typography>
-              )}
-            </Box>
-          </DialogContent>
-        )}
-        <DialogActions>
-          <Button onClick={() => setDashboardForm(null)}>{formatMessage('common.cancel')}</Button>
-          <Button
-            onClick={handleSaveDashboard}
-            color="primary"
-            variant="contained"
-            disabled={!dashboardForm || !dashboardForm.name.trim() || savingDashboard}
+          <Menu
+            anchorEl={dashboardMenuAnchor}
+            open={Boolean(dashboardMenuAnchor)}
+            onClose={() => setDashboardMenuAnchor(null)}
           >
-            {formatMessage('common.save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            {dashboards.map((dashboard) => (
+              <MenuItem
+                key={dashboard.id}
+                onClick={() => handleDashboardChange(dashboard.id)}
+                selected={dashboard.id === selectedDashboardId}
+              >
+                {dashboard.name}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Box>
 
-      <Dialog open={confirmDeleteDashboard} onClose={() => setConfirmDeleteDashboard(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>{formatMessage('dashboard.deleteTitle')}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2">
-            {formatMessageWithValues('dashboard.deleteConfirm', { name: currentDashboard?.name || '' })}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDeleteDashboard(false)}>{formatMessage('common.cancel')}</Button>
-          <Button onClick={handleDeleteDashboard} color="primary" variant="contained">
-            {formatMessage('common.delete')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {(errorDashboards || errorDashboard || layoutError || actionError) && (
+          <Paper className='AnalyticsDashboardPage-error' role="alert">
+            <Typography variant="body2">
+              {localise(errorDashboards || errorDashboard)
+                || (layoutError && formatMessageWithValues('dashboard.layoutError', { error: localise(layoutError) }))
+                || formatMessageWithValues('dashboard.actionError', { error: localise(actionError) })}
+            </Typography>
+          </Paper>
+        )}
 
-      <Dialog open={Boolean(widgetToRemove)} onClose={() => setWidgetToRemove(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>{formatMessage('dashboard.removeWidget')}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2">
-            {formatMessageWithValues('dashboard.removeWidgetConfirm', { title: widgetToRemove?.title || '' })}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setWidgetToRemove(null)}>{formatMessage('common.cancel')}</Button>
-          <Button onClick={handleRemoveWidget} color="primary" variant="contained">
-            {formatMessage('common.delete')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {widgets.length > 0 ? (
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={{ lg: layout }}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+            cols={{ lg: GRID_COLS, md: 10, sm: 6, xs: 4, xxs: 2 }}
+            rowHeight={GRID_ROW_HEIGHT}
+            margin={GRID_MARGIN}
+            containerPadding={GRID_CONTAINER_PADDING}
+            onBreakpointChange={setBreakpoint}
+            onDragStop={handleLayoutCommit}
+            onResizeStop={handleLayoutCommit}
+            isDraggable={canEdit && breakpoint === 'lg'}
+            isResizable={canEdit && breakpoint === 'lg'}
+            draggableCancel=".analytics-remove-widget"
+          >
+            {widgets.map((widget) => (
+              <div key={widget.id} className='AnalyticsDashboardPage-widgetContainer'>
+                {canEdit && (
+                  <IconButton
+                    size="small"
+                    className='AnalyticsDashboardPage-removeWidget analytics-remove-widget'
+                    onClick={() => setWidgetToRemove(widget)}
+                    aria-label={formatMessage('dashboard.removeWidget')}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                )}
+                {renderWidget(widget)}
+              </div>
+            ))}
+          </ResponsiveGridLayout>
+        ) : (
+          <Box className='AnalyticsDashboardPage-emptyState'>
+            <Typography variant="h6" gutterBottom>
+              {formatMessage('dashboard.noWidgets')}
+            </Typography>
+            {currentDashboard && (
+              <Typography variant="body2">
+                {formatMessage(canEdit ? 'dashboard.addWidgetsHint' : 'dashboard.noWidgetsViewer')}
+              </Typography>
+            )}
+          </Box>
+        )}
 
-      {hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY) && (
-        <Fab
-          className={classes.fab}
-          color="primary"
-          onClick={() => history.push('/analytics/query-builder')}
-        >
-          <AddIcon />
-        </Fab>
-      )}
-    </div>
+        <Dialog open={Boolean(dashboardForm)} onClose={() => setDashboardForm(null)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            {formatMessage(dashboardForm && dashboardForm.mode === 'edit' ? 'dashboard.editTitle' : 'dashboard.createTitle')}
+          </DialogTitle>
+          {dashboardForm && (
+            <DialogContent>
+              <Box display="flex" flexDirection="column" gap={2} mt={1}>
+                <TextField
+                  variant="standard"
+                  label={formatMessage('dashboard.name')}
+                  value={dashboardForm.name}
+                  onChange={(e) => setDashboardForm({ ...dashboardForm, name: e.target.value })}
+                  fullWidth
+                  required
+                  autoFocus />
+                <TextField
+                  variant="standard"
+                  label={formatMessage('dashboard.description')}
+                  value={dashboardForm.description}
+                  onChange={(e) => setDashboardForm({ ...dashboardForm, description: e.target.value })}
+                  fullWidth
+                  multiline
+                  rows={2} />
+                {canShare && (
+                  <FormControlLabel
+                    control={(
+                      <Switch
+                        checked={dashboardForm.isPublic}
+                        onChange={(e) => setDashboardForm({ ...dashboardForm, isPublic: e.target.checked })}
+                      />
+                    )}
+                    label={formatMessage('dashboard.makePublic')}
+                  />
+                )}
+                {dashboardFormError && (
+                  <Typography variant="body2" color="error" role="alert">
+                    {formatMessageWithValues('dashboard.saveError', { error: localise(dashboardFormError) })}
+                  </Typography>
+                )}
+              </Box>
+            </DialogContent>
+          )}
+          <DialogActions>
+            <Button onClick={() => setDashboardForm(null)}>{formatMessage('common.cancel')}</Button>
+            <Button
+              onClick={handleSaveDashboard}
+              color="primary"
+              variant="contained"
+              disabled={!dashboardForm || !dashboardForm.name.trim() || savingDashboard}
+            >
+              {formatMessage('common.save')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={confirmDeleteDashboard} onClose={() => setConfirmDeleteDashboard(false)} maxWidth="xs" fullWidth>
+          <DialogTitle>{formatMessage('dashboard.deleteTitle')}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2">
+              {formatMessageWithValues('dashboard.deleteConfirm', { name: currentDashboard?.name || '' })}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDeleteDashboard(false)}>{formatMessage('common.cancel')}</Button>
+            <Button onClick={handleDeleteDashboard} color="primary" variant="contained">
+              {formatMessage('common.delete')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={Boolean(widgetToRemove)} onClose={() => setWidgetToRemove(null)} maxWidth="xs" fullWidth>
+          <DialogTitle>{formatMessage('dashboard.removeWidget')}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2">
+              {formatMessageWithValues('dashboard.removeWidgetConfirm', { title: widgetToRemove?.title || '' })}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setWidgetToRemove(null)}>{formatMessage('common.cancel')}</Button>
+            <Button onClick={handleRemoveWidget} color="primary" variant="contained">
+              {formatMessage('common.delete')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY) && (
+          <Fab
+            className='AnalyticsDashboardPage-fab'
+            color="primary"
+            onClick={() => history.push('/analytics/query-builder')}
+          >
+            <AddIcon />
+          </Fab>
+        )}
+      </div>
+    </StyledAnalyticsDashboardPage>
   );
 };
 

@@ -12,7 +12,7 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import { useTranslations, useModulesManager, withTooltip, Helmet } from '@openimis/fe-core';
 import QueryBuilder from '../components/QueryBuilder';
 import { createQuery, updateQuery } from '../actions';
@@ -27,19 +27,21 @@ import {
   graphqlErrorMessage, hasRight, localiseError, requestErrorMessage,
 } from '../utils/analytics';
 
-const useStyles = makeStyles((theme) => ({
-  page: {
+const StyledQueryBuilderPage = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .QueryBuilderPage-page': {
     margin: theme.spacing(3),
   },
-  fab: {
+
+  '& .QueryBuilderPage-fab': {
     position: 'fixed',
     bottom: theme.spacing(2),
     right: theme.spacing(2),
-  },
+  }
 }));
 
 const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues } = useTranslations('analytics', modulesManager);
 
@@ -100,87 +102,91 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
 
   if (!hasRight(rights, RIGHT_ANALYTICS_CREATE_QUERY)) {
     return (
-      <div className={classes.page}>
-        <Helmet title={formatMessage('queryBuilder.pageTitle')} />
-        <Typography variant="body1" color="error" role="alert">
-          {formatMessage('queryBuilder.noRight')}
-        </Typography>
-      </div>
+      <StyledQueryBuilderPage>
+        <div className='QueryBuilderPage-page'>
+          <Helmet title={formatMessage('queryBuilder.pageTitle')} />
+          <Typography variant="body1" color="error" role="alert">
+            {formatMessage('queryBuilder.noRight')}
+          </Typography>
+        </div>
+      </StyledQueryBuilderPage>
     );
   }
 
   return (
-    <div className={classes.page}>
-      <Helmet title={formatMessage('queryBuilder.pageTitle')} />
+    <StyledQueryBuilderPage>
+      <div className='QueryBuilderPage-page'>
+        <Helmet title={formatMessage('queryBuilder.pageTitle')} />
 
-      <QueryBuilder
-        entityType={incoming.entityType}
-        queryConfig={incoming.queryConfig}
-        autoRun={Boolean(incoming.autoRun)}
-        onSave={canSave ? handleSaveQuery : null}
-        canExport={canExport}
-        onExecute={handleExecuteQuery}
-      />
+        <QueryBuilder
+          entityType={incoming.entityType}
+          queryConfig={incoming.queryConfig}
+          autoRun={Boolean(incoming.autoRun)}
+          onSave={canSave ? handleSaveQuery : null}
+          canExport={canExport}
+          onExecute={handleExecuteQuery}
+        />
 
-      {/* Save Query Dialog */}
-      <Dialog
-        open={saveDialogOpen}
-        onClose={() => setSaveDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{formatMessage('queryBuilder.saveQueryTitle')}</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} mt={1}>
-            <TextField
-              variant="standard"
-              label={formatMessage('queryBuilder.queryName')}
-              value={queryName}
-              onChange={(e) => setQueryName(e.target.value)}
-              fullWidth
-              required
-              autoFocus />
-            <TextField
-              variant="standard"
-              label={formatMessage('queryBuilder.queryDescription')}
-              value={queryDescription}
-              onChange={(e) => setQueryDescription(e.target.value)}
-              fullWidth
-              multiline
-              rows={3} />
-            {canShare && (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                  />
-                }
-                label={formatMessage('queryBuilder.makePublic')}
-              />
-            )}
-            {saveError && (
-              <Typography variant="body2" color="error" role="alert">
-                {formatMessageWithValues('queryBuilder.saveError', { error: localiseError(saveError, formatMessage, formatMessageWithValues) })}
-              </Typography>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSaveDialogOpen(false)}>
-            {formatMessage('common.cancel')}
-          </Button>
-          <Button
-            onClick={handleConfirmSave}
-            color="primary"
-            variant="contained"
-            disabled={!queryName || saving}
-          >
-            {formatMessage('common.save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
+        {/* Save Query Dialog */}
+        <Dialog
+          open={saveDialogOpen}
+          onClose={() => setSaveDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{formatMessage('queryBuilder.saveQueryTitle')}</DialogTitle>
+          <DialogContent>
+            <Box display="flex" flexDirection="column" gap={2} mt={1}>
+              <TextField
+                variant="standard"
+                label={formatMessage('queryBuilder.queryName')}
+                value={queryName}
+                onChange={(e) => setQueryName(e.target.value)}
+                fullWidth
+                required
+                autoFocus />
+              <TextField
+                variant="standard"
+                label={formatMessage('queryBuilder.queryDescription')}
+                value={queryDescription}
+                onChange={(e) => setQueryDescription(e.target.value)}
+                fullWidth
+                multiline
+                rows={3} />
+              {canShare && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={isPublic}
+                      onChange={(e) => setIsPublic(e.target.checked)}
+                    />
+                  }
+                  label={formatMessage('queryBuilder.makePublic')}
+                />
+              )}
+              {saveError && (
+                <Typography variant="body2" color="error" role="alert">
+                  {formatMessageWithValues('queryBuilder.saveError', { error: localiseError(saveError, formatMessage, formatMessageWithValues) })}
+                </Typography>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setSaveDialogOpen(false)}>
+              {formatMessage('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleConfirmSave}
+              color="primary"
+              variant="contained"
+              disabled={!queryName || saving}
+            >
+              {formatMessage('common.save')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    </StyledQueryBuilderPage>
   );
 };
 

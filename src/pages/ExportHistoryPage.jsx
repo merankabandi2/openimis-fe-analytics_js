@@ -15,32 +15,38 @@ import {
   Typography,
   Tooltip,
 } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { styled } from '@mui/material/styles';
 import { GetApp as DownloadIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { useTranslations, useModulesManager, Helmet, decodeId } from '@openimis/fe-core';
 import { fetchExports } from '../actions';
 import { DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS, RIGHT_ANALYTICS_EXPORT } from '../constants';
 import { hasRight, localiseError, pageArgs } from '../utils/analytics';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
+const StyledExportHistoryPage = styled('div')(({ theme }) => ({
+  display: 'contents',
+
+  '& .ExportHistoryPage-root': {
     margin: theme.spacing(3),
   },
-  header: {
+
+  '& .ExportHistoryPage-header': {
     marginBottom: theme.spacing(3),
   },
-  tableContainer: {
+
+  '& .ExportHistoryPage-tableContainer': {
     maxHeight: 'calc(100vh - 300px)',
   },
-  headerCell: {
+
+  '& .ExportHistoryPage-headerCell': {
     fontWeight: 600,
     backgroundColor: theme.palette.grey[100],
   },
-  error: {
+
+  '& .ExportHistoryPage-error': {
     marginBottom: theme.spacing(2),
     padding: theme.spacing(2),
     color: theme.palette.error.main,
-  },
+  }
 }));
 
 const ExportHistoryPage = ({
@@ -51,7 +57,6 @@ const ExportHistoryPage = ({
   errorExports,
   rights,
 }) => {
-  const classes = useStyles();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues, formatDateFromISO } = useTranslations('analytics', modulesManager);
   const allowed = hasRight(rights, RIGHT_ANALYTICS_EXPORT);
@@ -96,106 +101,110 @@ const ExportHistoryPage = ({
 
   if (!allowed) {
     return (
-      <div className={classes.root}>
-        <Helmet title={formatMessage('exportHistory.pageTitle')} />
-        <Typography variant="body1" color="error" role="alert">
-          {formatMessage('exportHistory.noRight')}
-        </Typography>
-      </div>
+      <StyledExportHistoryPage>
+        <div className='ExportHistoryPage-root'>
+          <Helmet title={formatMessage('exportHistory.pageTitle')} />
+          <Typography variant="body1" color="error" role="alert">
+            {formatMessage('exportHistory.noRight')}
+          </Typography>
+        </div>
+      </StyledExportHistoryPage>
     );
   }
 
   return (
-    <div className={classes.root}>
-      <Helmet title={formatMessage('exportHistory.pageTitle')} />
+    <StyledExportHistoryPage>
+      <div className='ExportHistoryPage-root'>
+        <Helmet title={formatMessage('exportHistory.pageTitle')} />
 
-      <Box className={classes.header} display="flex" alignItems="center">
-        <Typography variant="h4">
-          {formatMessage('exportHistory.title')}
-        </Typography>
-        <Tooltip title={formatMessage('exportHistory.refresh')}>
-          <IconButton onClick={handleRefresh} disabled={fetchingExports} size="large">
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      {errorExports && (
-        <Paper className={classes.error} role="alert">
-          <Typography variant="body2">
-            {localiseError(errorExports, formatMessage, formatMessageWithValues)}
+        <Box className='ExportHistoryPage-header' display="flex" alignItems="center">
+          <Typography variant="h4">
+            {formatMessage('exportHistory.title')}
           </Typography>
-        </Paper>
-      )}
+          <Tooltip title={formatMessage('exportHistory.refresh')}>
+            <IconButton onClick={handleRefresh} disabled={fetchingExports} size="large">
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
-      <TableContainer component={Paper} className={classes.tableContainer}>
-        <Table stickyHeader>
-          <TableHead>
-            <TableRow>
-              <TableCell className={classes.headerCell}>
-                {formatMessage('exportHistory.date')}
-              </TableCell>
-              <TableCell className={classes.headerCell}>
-                {formatMessage('exportHistory.query')}
-              </TableCell>
-              <TableCell className={classes.headerCell}>
-                {formatMessage('exportHistory.format')}
-              </TableCell>
-              <TableCell className={classes.headerCell}>
-                {formatMessage('exportHistory.rows')}
-              </TableCell>
-              <TableCell className={classes.headerCell}>
-                {formatMessage('exportHistory.exportedBy')}
-              </TableCell>
-              <TableCell className={classes.headerCell} align="center">
-                {formatMessage('exportHistory.download')}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {exports.map((exportRecord) => (
-              <TableRow key={exportRecord.id} hover>
-                <TableCell>{formatDateFromISO(exportRecord.exportedAt)}</TableCell>
-                <TableCell>
-                  {exportRecord.query?.name || formatMessage('exportHistory.adhocQuery')}
+        {errorExports && (
+          <Paper className='ExportHistoryPage-error' role="alert">
+            <Typography variant="body2">
+              {localiseError(errorExports, formatMessage, formatMessageWithValues)}
+            </Typography>
+          </Paper>
+        )}
+
+        <TableContainer component={Paper} className='ExportHistoryPage-tableContainer'>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell className='ExportHistoryPage-headerCell'>
+                  {formatMessage('exportHistory.date')}
                 </TableCell>
-                <TableCell>
-                  <Chip
-                    label={exportRecord.exportFormat.toUpperCase()}
-                    size="small"
-                    color={getFormatColor(exportRecord.exportFormat)}
-                  />
+                <TableCell className='ExportHistoryPage-headerCell'>
+                  {formatMessage('exportHistory.query')}
                 </TableCell>
-                <TableCell>{exportRecord.rowCount.toLocaleString()}</TableCell>
-                <TableCell>{exportRecord.exportedBy?.username}</TableCell>
-                <TableCell align="center">
-                  <Tooltip title={formatMessage('exportHistory.downloadFile')}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDownload(exportRecord)}
-                    >
-                      <DownloadIcon />
-                    </IconButton>
-                  </Tooltip>
+                <TableCell className='ExportHistoryPage-headerCell'>
+                  {formatMessage('exportHistory.format')}
+                </TableCell>
+                <TableCell className='ExportHistoryPage-headerCell'>
+                  {formatMessage('exportHistory.rows')}
+                </TableCell>
+                <TableCell className='ExportHistoryPage-headerCell'>
+                  {formatMessage('exportHistory.exportedBy')}
+                </TableCell>
+                <TableCell className='ExportHistoryPage-headerCell' align="center">
+                  {formatMessage('exportHistory.download')}
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {exports.map((exportRecord) => (
+                <TableRow key={exportRecord.id} hover>
+                  <TableCell>{formatDateFromISO(exportRecord.exportedAt)}</TableCell>
+                  <TableCell>
+                    {exportRecord.query?.name || formatMessage('exportHistory.adhocQuery')}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={exportRecord.exportFormat.toUpperCase()}
+                      size="small"
+                      color={getFormatColor(exportRecord.exportFormat)}
+                    />
+                  </TableCell>
+                  <TableCell>{exportRecord.rowCount.toLocaleString()}</TableCell>
+                  <TableCell>{exportRecord.exportedBy?.username}</TableCell>
+                  <TableCell align="center">
+                    <Tooltip title={formatMessage('exportHistory.downloadFile')}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDownload(exportRecord)}
+                      >
+                        <DownloadIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      <TablePagination
-        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-        component="div"
-        count={exportsPageInfo.totalCount || 0}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage={formatMessage('queryResults.rowsPerPage')}
-        labelDisplayedRows={({ from, to, count }) => formatMessageWithValues('pagination.displayedRows', { from, to, count })}
-      />
-    </div>
+        <TablePagination
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+          component="div"
+          count={exportsPageInfo.totalCount || 0}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage={formatMessage('queryResults.rowsPerPage')}
+          labelDisplayedRows={({ from, to, count }) => formatMessageWithValues('pagination.displayedRows', { from, to, count })}
+        />
+      </div>
+    </StyledExportHistoryPage>
   );
 };
 
