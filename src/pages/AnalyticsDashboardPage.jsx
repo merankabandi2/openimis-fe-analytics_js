@@ -20,8 +20,8 @@ import {
   FormControlLabel,
   Switch,
   Tooltip,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import {
   Add as AddIcon,
   MoreVert as MoreVertIcon,
@@ -29,7 +29,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Close as CloseIcon,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -382,7 +382,7 @@ const AnalyticsDashboardPage = ({
   return (
     <div className={classes.root}>
       <Helmet title={formatMessage('dashboard.pageTitle')} />
-      
+
       <Box className={classes.header}>
         <Box className={classes.dashboardSelector}>
           <DashboardIcon />
@@ -510,21 +510,21 @@ const AnalyticsDashboardPage = ({
           <DialogContent>
             <Box display="flex" flexDirection="column" gap={2} mt={1}>
               <TextField
+                variant="standard"
                 label={formatMessage('dashboard.name')}
                 value={dashboardForm.name}
                 onChange={(e) => setDashboardForm({ ...dashboardForm, name: e.target.value })}
                 fullWidth
                 required
-                autoFocus
-              />
+                autoFocus />
               <TextField
+                variant="standard"
                 label={formatMessage('dashboard.description')}
                 value={dashboardForm.description}
                 onChange={(e) => setDashboardForm({ ...dashboardForm, description: e.target.value })}
                 fullWidth
                 multiline
-                rows={2}
-              />
+                rows={2} />
               {canShare && (
                 <FormControlLabel
                   control={(

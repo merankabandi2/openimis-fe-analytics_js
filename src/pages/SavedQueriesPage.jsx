@@ -22,8 +22,8 @@ import {
   Button,
   TextField,
   MenuItem,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import {
   PlayArrow as RunIcon,
   Edit as EditIcon,
@@ -31,7 +31,7 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   PlaylistAdd as AddToDashboardIcon,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import { useTranslations, useModulesManager, Helmet } from '@openimis/fe-core';
 import {
   fetchQueries, deleteQuery, fetchDashboards, addWidget,
@@ -234,7 +234,7 @@ const SavedQueriesPage = ({
   return (
     <div className={classes.root}>
       <Helmet title={formatMessage('savedQueries.pageTitle')} />
-      
+
       <Box className={classes.header}>
         <Typography variant="h4">
           {formatMessage('savedQueries.title')}
@@ -387,35 +387,35 @@ const SavedQueriesPage = ({
             ) : (
               <Box display="flex" flexDirection="column" gap={2} mt={1}>
                 <TextField
+                  variant="standard"
                   select
                   label={formatMessage('savedQueries.dashboard')}
                   value={widgetForm.dashboardId}
                   onChange={(e) => setWidgetForm({ ...widgetForm, dashboardId: e.target.value })}
                   fullWidth
-                  required
-                >
+                  required>
                   {editableDashboards.map((dashboard) => (
                     <MenuItem key={dashboard.id} value={dashboard.id}>{dashboard.name}</MenuItem>
                   ))}
                 </TextField>
                 <TextField
+                  variant="standard"
                   select
                   label={formatMessage('savedQueries.widgetType')}
                   value={widgetForm.widgetType}
                   onChange={(e) => setWidgetForm({ ...widgetForm, widgetType: e.target.value })}
-                  fullWidth
-                >
+                  fullWidth>
                   {ADDABLE_WIDGET_TYPES.map((type) => (
                     <MenuItem key={type} value={type}>{formatMessage(`widgetType.${type}`)}</MenuItem>
                   ))}
                 </TextField>
                 <TextField
+                  variant="standard"
                   label={formatMessage('savedQueries.widgetTitle')}
                   value={widgetForm.title}
                   onChange={(e) => setWidgetForm({ ...widgetForm, title: e.target.value })}
                   fullWidth
-                  required
-                />
+                  required />
               </Box>
             )}
             {widgetError && (

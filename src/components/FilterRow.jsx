@@ -9,9 +9,9 @@ import {
   IconButton,
   Switch,
   FormControlLabel,
-} from '@material-ui/core';
-import { Delete as DeleteIcon } from '@material-ui/icons';
-import { DatePicker } from '@material-ui/pickers';
+} from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { toLocalDateString } from '../utils/analytics';
 
@@ -73,23 +73,23 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
     if (filter.operator === 'range') {
       return (
         <Grid container spacing={1}>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextField
+              variant="standard"
               label={formatMessage('filter.from')}
               value={filter.value?.[0] || ''}
               onChange={(e) => handleValueChange([e.target.value, filter.value?.[1] || ''])}
               fullWidth
-              type={fieldType.includes('Integer') || fieldType.includes('Decimal') ? 'number' : 'text'}
-            />
+              type={fieldType.includes('Integer') || fieldType.includes('Decimal') ? 'number' : 'text'} />
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextField
+              variant="standard"
               label={formatMessage('filter.to')}
               value={filter.value?.[1] || ''}
               onChange={(e) => handleValueChange([filter.value?.[0] || '', e.target.value])}
               fullWidth
-              type={fieldType.includes('Integer') || fieldType.includes('Decimal') ? 'number' : 'text'}
-            />
+              type={fieldType.includes('Integer') || fieldType.includes('Decimal') ? 'number' : 'text'} />
           </Grid>
         </Grid>
       );
@@ -98,12 +98,12 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
     switch (fieldType) {
       case 'BooleanField':
         return (
-          <FormControl fullWidth>
+          <FormControl variant="standard" fullWidth>
             <InputLabel>{formatMessage('filter.value')}</InputLabel>
             <Select
+              variant="standard"
               value={filter.value || ''}
-              onChange={(e) => handleValueChange(e.target.value)}
-            >
+              onChange={(e) => handleValueChange(e.target.value)}>
               <MenuItem value={true}>{formatMessage('common.yes')}</MenuItem>
               <MenuItem value={false}>{formatMessage('common.no')}</MenuItem>
             </Select>
@@ -127,22 +127,22 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
       case 'FloatField':
         return (
           <TextField
+            variant="standard"
             label={formatMessage('filter.value')}
             value={filter.value || ''}
             onChange={(e) => handleValueChange(e.target.value)}
             type="number"
-            fullWidth
-          />
+            fullWidth />
         );
 
       default:
         return (
           <TextField
+            variant="standard"
             label={formatMessage('filter.value')}
             value={filter.value || ''}
             onChange={(e) => handleValueChange(e.target.value)}
-            fullWidth
-          />
+            fullWidth />
         );
     }
   };
@@ -151,13 +151,17 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
 
   return (
     <Grid container spacing={2} alignItems="center" className={className}>
-      <Grid item xs={12} sm={3}>
-        <FormControl fullWidth>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 3
+        }}>
+        <FormControl variant="standard" fullWidth>
           <InputLabel>{formatMessage('filter.field')}</InputLabel>
           <Select
+            variant="standard"
             value={filter.field || ''}
-            onChange={(e) => handleFieldChange(e.target.value)}
-          >
+            onChange={(e) => handleFieldChange(e.target.value)}>
             {fields.filter(f => f.filterable).map((field) => (
               <MenuItem key={field.name} value={field.name}>
                 {field.label}
@@ -166,13 +170,17 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
           </Select>
         </FormControl>
       </Grid>
-      <Grid item xs={12} sm={3}>
-        <FormControl fullWidth disabled={!filter.field}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 3
+        }}>
+        <FormControl variant="standard" fullWidth disabled={!filter.field}>
           <InputLabel>{formatMessage('filter.operator')}</InputLabel>
           <Select
+            variant="standard"
             value={filter.operator || 'exact'}
-            onChange={(e) => handleOperatorChange(e.target.value)}
-          >
+            onChange={(e) => handleOperatorChange(e.target.value)}>
             {availableOperators.map((op) => (
               <MenuItem key={op} value={op}>
                 {formatMessage(`filter.operator.${op}`)}
@@ -181,10 +189,18 @@ const FilterRow = ({ filter, fields, onChange, onRemove, className }) => {
           </Select>
         </FormControl>
       </Grid>
-      <Grid item xs={12} sm={5}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 5
+        }}>
         {filter.field && renderValueInput()}
       </Grid>
-      <Grid item xs={12} sm={1}>
+      <Grid
+        size={{
+          xs: 12,
+          sm: 1
+        }}>
         <IconButton onClick={onRemove} size="small">
           <DeleteIcon />
         </IconButton>

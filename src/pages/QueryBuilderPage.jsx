@@ -11,8 +11,8 @@ import {
   Switch,
   Box,
   Typography,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useTranslations, useModulesManager, withTooltip, Helmet } from '@openimis/fe-core';
 import QueryBuilder from '../components/QueryBuilder';
 import { createQuery, updateQuery } from '../actions';
@@ -112,7 +112,7 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
   return (
     <div className={classes.page}>
       <Helmet title={formatMessage('queryBuilder.pageTitle')} />
-      
+
       <QueryBuilder
         entityType={incoming.entityType}
         queryConfig={incoming.queryConfig}
@@ -133,21 +133,21 @@ const QueryBuilderPage = ({ createQuery, updateQuery, rights, history, location 
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} mt={1}>
             <TextField
+              variant="standard"
               label={formatMessage('queryBuilder.queryName')}
               value={queryName}
               onChange={(e) => setQueryName(e.target.value)}
               fullWidth
               required
-              autoFocus
-            />
+              autoFocus />
             <TextField
+              variant="standard"
               label={formatMessage('queryBuilder.queryDescription')}
               value={queryDescription}
               onChange={(e) => setQueryDescription(e.target.value)}
               fullWidth
               multiline
-              rows={3}
-            />
+              rows={3} />
             {canShare && (
               <FormControlLabel
                 control={

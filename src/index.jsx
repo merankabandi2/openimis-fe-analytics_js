@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dashboard, BarChart, SaveAlt, History } from '@material-ui/icons';
+import { Dashboard, BarChart, SaveAlt, History } from '@mui/icons-material';
 import { FormattedMessage } from '@openimis/fe-core';
 import messages_en from './translations/en.json';
 import messages_fr from './translations/fr.json';

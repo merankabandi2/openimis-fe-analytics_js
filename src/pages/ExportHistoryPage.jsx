@@ -14,9 +14,9 @@ import {
   Box,
   Typography,
   Tooltip,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { GetApp as DownloadIcon, Refresh as RefreshIcon } from '@material-ui/icons';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
+import { GetApp as DownloadIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { useTranslations, useModulesManager, Helmet, decodeId } from '@openimis/fe-core';
 import { fetchExports } from '../actions';
 import { DEFAULT_PAGE_SIZE, ROWS_PER_PAGE_OPTIONS, RIGHT_ANALYTICS_EXPORT } from '../constants';
@@ -108,13 +108,13 @@ const ExportHistoryPage = ({
   return (
     <div className={classes.root}>
       <Helmet title={formatMessage('exportHistory.pageTitle')} />
-      
+
       <Box className={classes.header} display="flex" alignItems="center">
         <Typography variant="h4">
           {formatMessage('exportHistory.title')}
         </Typography>
         <Tooltip title={formatMessage('exportHistory.refresh')}>
-          <IconButton onClick={handleRefresh} disabled={fetchingExports}>
+          <IconButton onClick={handleRefresh} disabled={fetchingExports} size="large">
             <RefreshIcon />
           </IconButton>
         </Tooltip>

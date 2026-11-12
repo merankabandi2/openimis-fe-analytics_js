@@ -12,8 +12,8 @@ import {
   Paper,
   Chip,
   LinearProgress,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { ROWS_PER_PAGE_OPTIONS } from '../constants';
 

@@ -19,15 +19,15 @@ import {
   Divider,
   CircularProgress,
   Tooltip,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   PlayArrow as RunIcon,
   Save as SaveIcon,
   GetApp as ExportIcon,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import { useTranslations, useModulesManager } from '@openimis/fe-core';
 import { ENTITY_TYPES, MAX_QUERY_ROWS } from '../constants';
 import { fetchEntityFields, executeQuery, exportData } from '../actions';
@@ -239,12 +239,9 @@ const QueryBuilder = ({
           <Typography variant="h6" className={classes.sectionTitle}>
             {formatMessage('queryBuilder.selectEntity')}
           </Typography>
-          <FormControl fullWidth>
+          <FormControl variant="standard" fullWidth>
             <InputLabel>{formatMessage('queryBuilder.entityType')}</InputLabel>
-            <Select
-              value={entityType}
-              onChange={handleEntityTypeChange}
-            >
+            <Select variant="standard" value={entityType} onChange={handleEntityTypeChange}>
               {Object.entries(ENTITY_TYPES).map(([key, value]) => (
                 <MenuItem key={value} value={value}>
                   {formatMessage(`entity.${value}`)}
@@ -290,9 +287,10 @@ const QueryBuilder = ({
               <Typography variant="h6" className={classes.sectionTitle}>
                 {formatMessage('queryBuilder.selectFields')}
               </Typography>
-              <FormControl fullWidth>
+              <FormControl variant="standard" fullWidth>
                 <InputLabel>{formatMessage('queryBuilder.fields')}</InputLabel>
                 <Select
+                  variant="standard"
                   multiple
                   value={selectedFields}
                   onChange={(e) => setSelectedFields(e.target.value)}
@@ -302,8 +300,7 @@ const QueryBuilder = ({
                         <Chip key={value} label={value} size="small" />
                       ))}
                     </Box>
-                  )}
-                >
+                  )}>
                   {fields.map((field) => (
                     <MenuItem key={field.name} value={field.name}>
                       {field.label}
@@ -322,9 +319,10 @@ const QueryBuilder = ({
               </Typography>
               
               {/* Group By */}
-              <FormControl fullWidth style={{ marginBottom: 16 }}>
+              <FormControl variant="standard" fullWidth style={{ marginBottom: 16 }}>
                 <InputLabel>{formatMessage('queryBuilder.groupBy')}</InputLabel>
                 <Select
+                  variant="standard"
                   multiple
                   value={groupBy}
                   onChange={(e) => setGroupBy(e.target.value)}
@@ -334,8 +332,7 @@ const QueryBuilder = ({
                         <Chip key={value} label={value} size="small" />
                       ))}
                     </Box>
-                  )}
-                >
+                  )}>
                   {fields.map((field) => (
                     <MenuItem key={field.name} value={field.name}>
                       {field.label}
@@ -376,10 +373,15 @@ const QueryBuilder = ({
                 {formatMessage('queryBuilder.queryOptions')}
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
+                <Grid
+                  size={{
+                    xs: 12,
+                    md: 6
+                  }}>
+                  <FormControl variant="standard" fullWidth>
                     <InputLabel>{formatMessage('queryBuilder.orderBy')}</InputLabel>
                     <Select
+                      variant="standard"
                       multiple
                       value={orderBy}
                       onChange={(e) => setOrderBy(e.target.value)}
@@ -389,8 +391,7 @@ const QueryBuilder = ({
                             <Chip key={value} label={value} size="small" />
                           ))}
                         </Box>
-                      )}
-                    >
+                      )}>
                       {orderOptions.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}
@@ -399,8 +400,13 @@ const QueryBuilder = ({
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    md: 6
+                  }}>
                   <TextField
+                    variant="standard"
                     type="number"
                     label={formatMessage('queryBuilder.limit')}
                     value={limit}
@@ -409,8 +415,7 @@ const QueryBuilder = ({
                     )}
                     fullWidth
                     helperText={formatMessageWithValues('queryBuilder.limitHelp', { max: MAX_QUERY_ROWS })}
-                    InputProps={{ inputProps: { min: 1, max: MAX_QUERY_ROWS } }}
-                  />
+                    InputProps={{ inputProps: { min: 1, max: MAX_QUERY_ROWS } }} />
                 </Grid>
               </Grid>
             </Box>
@@ -440,18 +445,12 @@ const QueryBuilder = ({
             {canExport && queryResults && (
               <>
                 <Tooltip title={formatMessage('queryBuilder.exportExcel')}>
-                  <IconButton
-                    onClick={() => handleExport('excel')}
-                    disabled={exporting}
-                  >
+                  <IconButton onClick={() => handleExport('excel')} disabled={exporting} size="large">
                     <ExportIcon />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title={formatMessage('queryBuilder.exportCSV')}>
-                  <IconButton
-                    onClick={() => handleExport('csv')}
-                    disabled={exporting}
-                  >
+                  <IconButton onClick={() => handleExport('csv')} disabled={exporting} size="large">
                     <ExportIcon />
                   </IconButton>
                 </Tooltip>
